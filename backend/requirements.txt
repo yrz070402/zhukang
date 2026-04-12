@@ -1,0 +1,32 @@
+# FastAPI 核心
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+pydantic==2.11.3
+pydantic-settings==2.8.1
+
+# 异步支持
+python-multipart==0.0.20
+aiofiles==24.1.0
+
+# HTTP 客户端（用于调用豆包API）
+httpx==0.28.1
+requests==2.32.3
+
+# 图像处理
+pillow==11.1.0
+python-magic-bin==0.4.14; sys_platform == 'win32'
+
+# 数据库
+sqlalchemy==2.0.40
+asyncpg==0.30.0
+alembic==1.15.2
+
+# 工具
+python-dotenv==1.1.0
+python-jose[cryptography]==3.4.0
+passlib[bcrypt]==1.7.4
+
+# 开发工具
+pytest==8.3.5
+pytest-asyncio==0.26.0
+httpx==0.28.1
