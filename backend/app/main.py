@@ -1,12 +1,33 @@
 """
 筑康后端服务 - FastAPI 主应用
 """
+from contextlib import asynccontextmanager
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
 
 # 导入 API 路由
 from app.api.v1 import router as api_v1_router
+from app.core.config import get_settings
+from app.core.database import check_database_connection, close_db_engine
+
+
+settings = get_settings()
+
+
+def get_local_now_iso() -> str:
+    """返回应用配置时区下的当前时间，默认使用北京时区。"""
+    return datetime.now(ZoneInfo(settings.timezone)).isoformat()
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """应用生命周期：启动时检测数据库可达，关闭时释放连接池。"""
+    await check_database_connection()
+    yield
+    await close_db_engine()
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
@@ -14,7 +35,8 @@ app = FastAPI(
     description="饮食、保健品与医疗一体化健康管理平台后端服务",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # 配置 CORS（允许 Android 客户端访问）
@@ -39,7 +61,7 @@ async def ping():
     return {
         "status": "ok",
         "message": "筑康后端已启动",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": get_local_now_iso(),
     }
 
 
