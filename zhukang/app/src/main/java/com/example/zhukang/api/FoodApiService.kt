@@ -17,7 +17,10 @@ import java.util.concurrent.TimeUnit
 interface FoodApiService {
 
     @Multipart
-    @POST("api/v1/food/analyze")
+    // 运行模式
+    // @POST("api/v1/food/analyze")
+    // 调试模式
+    @POST("api/v1/food/analyze/mock")
     suspend fun analyzeFood(
         @Part image: MultipartBody.Part
     ): Response<FoodAnalysisResponse>

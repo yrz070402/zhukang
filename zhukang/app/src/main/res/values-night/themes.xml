@@ -1,7 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Zhukang" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="android:colorBackground">@color/zk_bg</item>
+        <item name="colorSurface">@color/zk_surface</item>
+        <item name="colorPrimary">@color/zk_primary</item>
+        <item name="colorPrimaryContainer">@color/zk_secondary</item>
+        <item name="colorOnPrimary">@color/zk_on_primary</item>
+        <item name="colorOnSurface">@color/zk_text_primary</item>
     </style>
 </resources>

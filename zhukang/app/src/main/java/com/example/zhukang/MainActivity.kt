@@ -32,8 +32,14 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
+
+    private enum class ProgressDisplayMode {
+        PERCENTAGE,
+        ABSOLUTE
+    }
 
     // Views
     private lateinit var btnTakePhoto: Button
@@ -47,6 +53,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvProtein: TextView
     private lateinit var tvFat: TextView
     private lateinit var tvCarbs: TextView
+    private lateinit var cardDayProgress: CardView
+    private lateinit var tvProgressModeHint: TextView
+    private lateinit var tvDayCaloriesValue: TextView
+    private lateinit var tvDayProteinValue: TextView
+    private lateinit var tvDayFatValue: TextView
+    private lateinit var tvDayCarbsValue: TextView
+    private lateinit var pbDayCalories: ProgressBar
+    private lateinit var pbDayProtein: ProgressBar
+    private lateinit var pbDayFat: ProgressBar
+    private lateinit var pbDayCarbs: ProgressBar
     private lateinit var tvError: TextView
 
     // API Service
@@ -55,6 +71,19 @@ class MainActivity : AppCompatActivity() {
     // 当前拍照的图片 URI
     private var currentPhotoUri: Uri? = null
     private var currentPhotoPath: String? = null
+    private var progressDisplayMode = ProgressDisplayMode.PERCENTAGE
+
+    // 当前后端尚未提供数据库进度数据，这组目标值仅作效果展示。
+    private val dailyGoalCalories = 1800f
+    private val dailyGoalProtein = 60f
+    private val dailyGoalFat = 50f
+    private val dailyGoalCarbs = 250f
+
+    // 当前进度数值用于点击切换显示模式，后续可直接替换为后端返回的真实数据。
+    private var currentCalories = 0f
+    private var currentProtein = 0f
+    private var currentFat = 0f
+    private var currentCarbs = 0f
 
     companion object {
         private const val TAG = "MainActivity"
@@ -110,6 +139,15 @@ class MainActivity : AppCompatActivity() {
         btnTestImage.setOnClickListener {
             analyzeTestImage()
         }
+
+        cardDayProgress.setOnClickListener {
+            progressDisplayMode = if (progressDisplayMode == ProgressDisplayMode.PERCENTAGE) {
+                ProgressDisplayMode.ABSOLUTE
+            } else {
+                ProgressDisplayMode.PERCENTAGE
+            }
+            renderProgressValues(animate = true)
+        }
     }
 
     private fun initViews() {
@@ -124,6 +162,16 @@ class MainActivity : AppCompatActivity() {
         tvProtein = findViewById(R.id.tvProtein)
         tvFat = findViewById(R.id.tvFat)
         tvCarbs = findViewById(R.id.tvCarbs)
+        cardDayProgress = findViewById(R.id.cardDayProgress)
+        tvProgressModeHint = findViewById(R.id.tvProgressModeHint)
+        tvDayCaloriesValue = findViewById(R.id.tvDayCaloriesValue)
+        tvDayProteinValue = findViewById(R.id.tvDayProteinValue)
+        tvDayFatValue = findViewById(R.id.tvDayFatValue)
+        tvDayCarbsValue = findViewById(R.id.tvDayCarbsValue)
+        pbDayCalories = findViewById(R.id.pbDayCalories)
+        pbDayProtein = findViewById(R.id.pbDayProtein)
+        pbDayFat = findViewById(R.id.pbDayFat)
+        pbDayCarbs = findViewById(R.id.pbDayCarbs)
         tvError = findViewById(R.id.tvError)
     }
 
@@ -299,8 +347,80 @@ class MainActivity : AppCompatActivity() {
         tvFat.text = response.fat.toInt().toString()
         tvCarbs.text = response.carbs.toInt().toString()
 
+        currentCalories = response.calories
+        currentProtein = response.protein
+        currentFat = response.fat
+        currentCarbs = response.carbs
+        renderProgressValues()
+
         cardResult.visibility = android.view.View.VISIBLE
+        cardDayProgress.visibility = android.view.View.VISIBLE
         tvError.visibility = android.view.View.GONE
+    }
+
+    private fun renderProgressValues(animate: Boolean = false) {
+        val caloriesPercent = toPercent(currentCalories, dailyGoalCalories)
+        val proteinPercent = toPercent(currentProtein, dailyGoalProtein)
+        val fatPercent = toPercent(currentFat, dailyGoalFat)
+        val carbsPercent = toPercent(currentCarbs, dailyGoalCarbs)
+
+        pbDayCalories.progress = caloriesPercent
+        pbDayProtein.progress = proteinPercent
+        pbDayFat.progress = fatPercent
+        pbDayCarbs.progress = carbsPercent
+
+        if (animate) {
+            val modeViews = listOf(
+                tvProgressModeHint,
+                tvDayCaloriesValue,
+                tvDayProteinValue,
+                tvDayFatValue,
+                tvDayCarbsValue
+            )
+            var remainingFadeOut = modeViews.size
+            modeViews.forEach { view ->
+                view.animate().cancel()
+                view.animate().alpha(0f).setDuration(100).withEndAction {
+                    remainingFadeOut -= 1
+                    if (remainingFadeOut == 0) {
+                        updateProgressDisplayText(caloriesPercent, proteinPercent, fatPercent, carbsPercent)
+                        modeViews.forEach { fadeInView ->
+                            fadeInView.animate().alpha(1f).setDuration(100).start()
+                        }
+                    }
+                }.start()
+            }
+            return
+        }
+
+        updateProgressDisplayText(caloriesPercent, proteinPercent, fatPercent, carbsPercent)
+    }
+
+    private fun updateProgressDisplayText(
+        caloriesPercent: Int,
+        proteinPercent: Int,
+        fatPercent: Int,
+        carbsPercent: Int
+    ) {
+
+        if (progressDisplayMode == ProgressDisplayMode.PERCENTAGE) {
+            tvProgressModeHint.text = "百分比（点按切换）"
+            tvDayCaloriesValue.text = "$caloriesPercent%"
+            tvDayProteinValue.text = "$proteinPercent%"
+            tvDayFatValue.text = "$fatPercent%"
+            tvDayCarbsValue.text = "$carbsPercent%"
+        } else {
+            tvProgressModeHint.text = "绝对值（点按切换）"
+            tvDayCaloriesValue.text = "${currentCalories.roundToInt()}kcal / ${dailyGoalCalories.roundToInt()}kcal"
+            tvDayProteinValue.text = "${currentProtein.roundToInt()}g / ${dailyGoalProtein.roundToInt()}g"
+            tvDayFatValue.text = "${currentFat.roundToInt()}g / ${dailyGoalFat.roundToInt()}g"
+            tvDayCarbsValue.text = "${currentCarbs.roundToInt()}g / ${dailyGoalCarbs.roundToInt()}g"
+        }
+    }
+
+    private fun toPercent(value: Float, total: Float): Int {
+        if (total <= 0f) return 0
+        return ((value / total) * 100f).roundToInt().coerceIn(0, 100)
     }
 
     /**
@@ -310,6 +430,7 @@ class MainActivity : AppCompatActivity() {
         tvError.text = message
         tvError.visibility = android.view.View.VISIBLE
         cardResult.visibility = android.view.View.GONE
+        cardDayProgress.visibility = android.view.View.GONE
         hideLoading()
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }

@@ -2,4 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="zk_bg">#FFF8F1</color>
+    <color name="zk_surface">#FFFFFCF8</color>
+    <color name="zk_primary">#E58A3A</color>
+    <color name="zk_primary_variant">#C96F20</color>
+    <color name="zk_secondary">#F4B274</color>
+    <color name="zk_on_primary">#FFFFFFFF</color>
+    <color name="zk_text_primary">#4A3A2A</color>
+    <color name="zk_text_secondary">#7A6A59</color>
+    <color name="zk_divider">#F1DEC9</color>
+    <color name="zk_progress_track">#F3E3D2</color>
+    <color name="zk_nutrient_calories">#D97706</color>
+    <color name="zk_nutrient_protein">#E57D47</color>
+    <color name="zk_nutrient_fat">#CC6B3D</color>
+    <color name="zk_nutrient_carbs">#B85C2E</color>
+    <color name="zk_error">#B3261E</color>
 </resources>

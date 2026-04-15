@@ -10,16 +10,16 @@ data class FoodAnalysisResponse(
     val foodName: String,
 
     @SerializedName("calories")
-    val calories: Double,
+    val calories: Float,
 
     @SerializedName("protein")
-    val protein: Double,
+    val protein: Float,
 
     @SerializedName("fat")
-    val fat: Double,
+    val fat: Float,
 
     @SerializedName("carbs")
-    val carbs: Double
+    val carbs: Float
 ) {
     override fun toString(): String {
         return """
