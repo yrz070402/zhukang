@@ -339,26 +339,48 @@
                         android:textColor="@color/zk_text_secondary"
                         android:textSize="13sp" />
 
-                    <TextView
-                        android:id="@+id/tvDayCaloriesValue"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="0%"
-                        android:textColor="@color/zk_nutrient_calories"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <ProgressBar
-                        android:id="@+id/pbDayCalories"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        <TextView
+                            android:id="@+id/tvDayCaloriesValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="0%"
+                            android:textColor="@color/zk_nutrient_calories"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/ivDayCaloriesWarning"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:contentDescription="超量警示"
+                            android:src="@drawable/alert_red"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressBackgroundTint="@color/zk_progress_track"
-                        android:progressTint="@color/zk_nutrient_calories" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp">
+
+                        <ProgressBar
+                            android:id="@+id/pbDayCalories"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="8dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressBackgroundTint="@color/zk_progress_track"
+                            android:progressTint="@color/zk_nutrient_calories" />
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -368,26 +390,48 @@
                         android:textColor="@color/zk_text_secondary"
                         android:textSize="13sp" />
 
-                    <TextView
-                        android:id="@+id/tvDayProteinValue"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="0%"
-                        android:textColor="@color/zk_nutrient_protein"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <ProgressBar
-                        android:id="@+id/pbDayProtein"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        <TextView
+                            android:id="@+id/tvDayProteinValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="0%"
+                            android:textColor="@color/zk_nutrient_protein"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/ivDayProteinWarning"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:contentDescription="超量警示"
+                            android:src="@drawable/alert_red"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressBackgroundTint="@color/zk_progress_track"
-                        android:progressTint="@color/zk_nutrient_protein" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp">
+
+                        <ProgressBar
+                            android:id="@+id/pbDayProtein"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="8dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressBackgroundTint="@color/zk_progress_track"
+                            android:progressTint="@color/zk_nutrient_protein" />
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -397,26 +441,48 @@
                         android:textColor="@color/zk_text_secondary"
                         android:textSize="13sp" />
 
-                    <TextView
-                        android:id="@+id/tvDayFatValue"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="0%"
-                        android:textColor="@color/zk_nutrient_fat"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <ProgressBar
-                        android:id="@+id/pbDayFat"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        <TextView
+                            android:id="@+id/tvDayFatValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="0%"
+                            android:textColor="@color/zk_nutrient_fat"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/ivDayFatWarning"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:contentDescription="超量警示"
+                            android:src="@drawable/alert_red"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressBackgroundTint="@color/zk_progress_track"
-                        android:progressTint="@color/zk_nutrient_fat" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp">
+
+                        <ProgressBar
+                            android:id="@+id/pbDayFat"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="8dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressBackgroundTint="@color/zk_progress_track"
+                            android:progressTint="@color/zk_nutrient_fat" />
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -426,26 +492,48 @@
                         android:textColor="@color/zk_text_secondary"
                         android:textSize="13sp" />
 
-                    <TextView
-                        android:id="@+id/tvDayCarbsValue"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="0%"
-                        android:textColor="@color/zk_nutrient_carbs"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <ProgressBar
-                        android:id="@+id/pbDayCarbs"
-                        style="?android:attr/progressBarStyleHorizontal"
+                        <TextView
+                            android:id="@+id/tvDayCarbsValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="0%"
+                            android:textColor="@color/zk_nutrient_carbs"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/ivDayCarbsWarning"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:contentDescription="超量警示"
+                            android:src="@drawable/alert_red"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="6dp"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressBackgroundTint="@color/zk_progress_track"
-                        android:progressTint="@color/zk_nutrient_carbs" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp">
+
+                        <ProgressBar
+                            android:id="@+id/pbDayCarbs"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="8dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressBackgroundTint="@color/zk_progress_track"
+                            android:progressTint="@color/zk_nutrient_carbs" />
+                    </FrameLayout>
 
                 </LinearLayout>
 
