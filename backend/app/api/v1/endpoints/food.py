@@ -100,8 +100,8 @@ async def analyze_food_mock(image: UploadFile = File(...)):
             food_name="调试样例-鸡胸肉沙拉",
             calories=420.0,
             protein=32.0,
-            fat=14.0,
-            carbs=38.0
+            fat=45.0,
+            carbs=400.0
         )
 
     except HTTPException:

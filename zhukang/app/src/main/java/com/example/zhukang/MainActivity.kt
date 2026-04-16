@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -41,6 +42,12 @@ class MainActivity : AppCompatActivity() {
         ABSOLUTE
     }
 
+    private enum class IntakeLevel {
+        LOW_OR_EXCESSIVE,
+        CAUTION,
+        IDEAL
+    }
+
     // Views
     private lateinit var btnTakePhoto: Button
     private lateinit var btnTestImage: Button
@@ -63,6 +70,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pbDayProtein: ProgressBar
     private lateinit var pbDayFat: ProgressBar
     private lateinit var pbDayCarbs: ProgressBar
+    private lateinit var ivDayCaloriesWarning: ImageView
+    private lateinit var ivDayProteinWarning: ImageView
+    private lateinit var ivDayFatWarning: ImageView
+    private lateinit var ivDayCarbsWarning: ImageView
     private lateinit var tvError: TextView
 
     // API Service
@@ -172,6 +183,10 @@ class MainActivity : AppCompatActivity() {
         pbDayProtein = findViewById(R.id.pbDayProtein)
         pbDayFat = findViewById(R.id.pbDayFat)
         pbDayCarbs = findViewById(R.id.pbDayCarbs)
+        ivDayCaloriesWarning = findViewById(R.id.ivDayCaloriesWarning)
+        ivDayProteinWarning = findViewById(R.id.ivDayProteinWarning)
+        ivDayFatWarning = findViewById(R.id.ivDayFatWarning)
+        ivDayCarbsWarning = findViewById(R.id.ivDayCarbsWarning)
         tvError = findViewById(R.id.tvError)
     }
 
@@ -364,10 +379,11 @@ class MainActivity : AppCompatActivity() {
         val fatPercent = toPercent(currentFat, dailyGoalFat)
         val carbsPercent = toPercent(currentCarbs, dailyGoalCarbs)
 
-        pbDayCalories.progress = caloriesPercent
-        pbDayProtein.progress = proteinPercent
-        pbDayFat.progress = fatPercent
-        pbDayCarbs.progress = carbsPercent
+        applyProgressVisual(pbDayCalories, caloriesPercent)
+        applyProgressVisual(pbDayProtein, proteinPercent)
+        applyProgressVisual(pbDayFat, fatPercent)
+        applyProgressVisual(pbDayCarbs, carbsPercent)
+        updateWarningIcons(caloriesPercent, proteinPercent, fatPercent, carbsPercent)
 
         if (animate) {
             val modeViews = listOf(
@@ -418,9 +434,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyProgressVisual(progressBar: ProgressBar, percent: Int) {
+        val intakeLevel = getIntakeLevel(percent)
+        val tintColor = ContextCompat.getColor(this, intakeLevel.toColorRes())
+        progressBar.max = 100
+        progressBar.progressTintList = ColorStateList.valueOf(tintColor)
+        progressBar.progress = percent.coerceIn(0, 100)
+    }
+
+    private fun updateWarningIcons(
+        caloriesPercent: Int,
+        proteinPercent: Int,
+        fatPercent: Int,
+        carbsPercent: Int
+    ) {
+        ivDayCaloriesWarning.visibility = if (caloriesPercent > 100) android.view.View.VISIBLE else android.view.View.GONE
+        ivDayProteinWarning.visibility = if (proteinPercent > 100) android.view.View.VISIBLE else android.view.View.GONE
+        ivDayFatWarning.visibility = if (fatPercent > 100) android.view.View.VISIBLE else android.view.View.GONE
+        ivDayCarbsWarning.visibility = if (carbsPercent > 100) android.view.View.VISIBLE else android.view.View.GONE
+    }
+
+    private fun getIntakeLevel(percent: Int): IntakeLevel {
+        return when {
+            percent < 50 || percent > 120 -> IntakeLevel.LOW_OR_EXCESSIVE
+            percent < 80 || percent > 100 -> IntakeLevel.CAUTION
+            else -> IntakeLevel.IDEAL
+        }
+    }
+
+    private fun IntakeLevel.toColorRes(): Int {
+        return when (this) {
+            IntakeLevel.LOW_OR_EXCESSIVE -> R.color.zk_progress_level_red
+            IntakeLevel.CAUTION -> R.color.zk_progress_level_yellow
+            IntakeLevel.IDEAL -> R.color.zk_progress_level_green
+        }
+    }
+
     private fun toPercent(value: Float, total: Float): Int {
         if (total <= 0f) return 0
-        return ((value / total) * 100f).roundToInt().coerceIn(0, 100)
+        return ((value / total) * 100f).roundToInt().coerceAtLeast(0)
     }
 
     /**

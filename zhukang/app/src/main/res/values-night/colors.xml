@@ -16,5 +16,8 @@
     <color name="zk_nutrient_protein">#FFEE8A63</color>
     <color name="zk_nutrient_fat">#FFE5785A</color>
     <color name="zk_nutrient_carbs">#FFD16B45</color>
+    <color name="zk_progress_level_red">#FFF48A80</color>
+    <color name="zk_progress_level_yellow">#FFF2C86E</color>
+    <color name="zk_progress_level_green">#FFB6EA98</color>
     <color name="zk_error">#FFFFB4AB</color>
 </resources>
