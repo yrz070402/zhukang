@@ -167,6 +167,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         loadUserGoalTargets()
+        loadUserDailyIntakeSummary()
     }
 
     private fun loadUserGoalTargets() {
@@ -193,6 +194,32 @@ class MainActivity : AppCompatActivity() {
             dailyGoalCarbs = body.targetCarbG.coerceAtLeast(0f)
 
             renderProgressValues()
+        }
+    }
+
+    private fun loadUserDailyIntakeSummary() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            return
+        }
+
+        lifecycleScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                runCatching { authApiService.getUserDailyIntakeSummary(userId) }.getOrNull()
+            }
+
+            if (response?.isSuccessful != true || response.body() == null) {
+                return@launch
+            }
+
+            val body = response.body()!!
+            currentCalories = body.totalCaloriesKcal.coerceAtLeast(0f)
+            currentProtein = body.totalProteinG.coerceAtLeast(0f)
+            currentFat = body.totalFatG.coerceAtLeast(0f)
+            currentCarbs = body.totalCarbG.coerceAtLeast(0f)
+
+            renderProgressValues()
+            cardDayProgress.visibility = android.view.View.VISIBLE
         }
     }
 
@@ -336,6 +363,13 @@ class MainActivity : AppCompatActivity() {
     private fun uploadAndAnalyze(imageBytes: ByteArray, fileName: String) {
         showLoading()
 
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            hideLoading()
+            showError("缺少用户信息，请重新登录")
+            return
+        }
+
         lifecycleScope.launch {
             try {
                 // 创建 MultipartBody.Part
@@ -345,11 +379,12 @@ class MainActivity : AppCompatActivity() {
                     fileName,
                     requestFile
                 )
+                val userIdPart = userId.toRequestBody("text/plain".toMediaTypeOrNull())
 
                 Log.d(TAG, "上传图片: $fileName, 大小: ${imageBytes.size} bytes")
 
                 // 调用 API
-                val response = foodApiService.analyzeFood(imagePart)
+                val response = foodApiService.analyzeFood(imagePart, userIdPart)
 
                 hideLoading()
 
@@ -397,15 +432,10 @@ class MainActivity : AppCompatActivity() {
         tvFat.text = response.fat.toInt().toString()
         tvCarbs.text = response.carbs.toInt().toString()
 
-        currentCalories = response.calories
-        currentProtein = response.protein
-        currentFat = response.fat
-        currentCarbs = response.carbs
-        renderProgressValues()
-
         cardResult.visibility = android.view.View.VISIBLE
         cardDayProgress.visibility = android.view.View.VISIBLE
         tvError.visibility = android.view.View.GONE
+        loadUserDailyIntakeSummary()
     }
 
     private fun renderProgressValues(animate: Boolean = false) {

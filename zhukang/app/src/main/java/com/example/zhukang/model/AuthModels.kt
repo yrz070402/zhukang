@@ -64,3 +64,13 @@ data class UserDailyGoalTargetsResponse(
     @SerializedName("target_fat_g") val targetFatG: Float,
     @SerializedName("target_carb_g") val targetCarbG: Float
 )
+
+data class UserDailyIntakeSummaryResponse(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("start_at") val startAt: String,
+    @SerializedName("end_at") val endAt: String,
+    @SerializedName("total_calories_kcal") val totalCaloriesKcal: Float,
+    @SerializedName("total_protein_g") val totalProteinG: Float,
+    @SerializedName("total_fat_g") val totalFatG: Float,
+    @SerializedName("total_carb_g") val totalCarbG: Float
+)

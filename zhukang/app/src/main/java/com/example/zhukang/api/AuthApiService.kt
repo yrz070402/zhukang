@@ -7,6 +7,7 @@ import com.example.zhukang.model.ProfileSetupRequest
 import com.example.zhukang.model.ProfileSetupResponse
 import com.example.zhukang.model.RegisterRequest
 import com.example.zhukang.model.RegisterResponse
+import com.example.zhukang.model.UserDailyIntakeSummaryResponse
 import com.example.zhukang.model.UserDailyGoalTargetsResponse
 import okhttp3.OkHttpClient
 import retrofit2.Response
@@ -60,6 +61,11 @@ interface AuthApiService {
     suspend fun getUserGoalTargets(
         @Query("user_id") userId: String
     ): Response<UserDailyGoalTargetsResponse>
+
+    @GET("api/v1/auth/user/intake-summary")
+    suspend fun getUserDailyIntakeSummary(
+        @Query("user_id") userId: String
+    ): Response<UserDailyIntakeSummaryResponse>
 
     companion object {
         private const val BASE_URL = "http://10.0.2.2:8000/"
