@@ -1,6 +1,6 @@
 ## Plan: 后端数据库搭建与维护落地
 
-目标是在现有 FastAPI 后端中建立可持续维护的 PostgreSQL 数据层，覆盖用户账号认证、用户身体信息与目标管理、固定枚举标签体系、饮食摄入记录（四大营养素+常见微量营养），并同步建立迁移规范、审计字段和索引巡检机制。方案采用 SQLAlchemy 2 + AsyncSession + Alembic，先完成核心数据模型与读写链路，再补齐治理与运维规范。
+目标是在现有 FastAPI 后端中建立可持续维护的 PostgreSQL 数据层，覆盖用户账号认证、用户身体信息与目标管理、动态标签体系、饮食摄入记录（四大营养素+常见微量营养），并同步建立迁移规范、审计字段和索引巡检机制。方案采用 SQLAlchemy 2 + AsyncSession + Alembic，先完成核心数据模型与读写链路，再补齐治理与运维规范。
 
 **Steps**
 1. Phase 1 - 数据层基建（阻塞后续）
@@ -8,12 +8,12 @@
 3. 新建 backend/app/core/database.py，建立 AsyncEngine、async_sessionmaker、get_db 依赖、健康检查函数；在 backend/app/main.py 注册启动/关闭钩子用于连接池生命周期。 
 4. 初始化 Alembic（alembic.ini + alembic/env.py），接入 SQLAlchemy metadata，确定命名约定（主键、外键、唯一索引命名规则）。
 5. Phase 2 - 领域模型与约束设计（依赖 Phase 1）
-6. 新建 backend/app/models/models.py，定义表：users、user_profiles、user_goals、tags、user_tags、nutrition_intakes。核心关系：users 1:1 user_profiles；users 1:N user_goals；users M:N tags（经 user_tags）；users 1:N nutrition_intakes。
+6. 新建 backend/app/models/models.py，定义表：users、user_profiles、user_goals、tags、user_tags、nutrition_intakes。核心关系：users 1:1 user_profiles；users 1:1 user_goals（当前目标）；users M:N tags（经 user_tags）；users 1:N nutrition_intakes。
 7. 统一审计字段策略：所有业务表加入 created_at、updated_at，可选 deleted_at（软删除）；关键枚举字段（goal_type、meal_type、sex）用数据库 Enum 或受控字符串 + Check Constraint。
 8. nutrition_intakes 字段设计：intake_time、meal_type、food_name、portion_size、energy_kcal、fat_g、carb_g、protein_g，并扩展 calcium_mg、iron_mg、fiber_g、sodium_mg；保留 source_type（ai/manual）与 remark。
-9. tags 采用固定枚举表：通过 seed migration 写入初始标签，API 仅允许从固定集合选择，不开放自由创建。
+9. tags 采用动态字典表：可写入初始标签用于冷启动，后续支持按业务持续新增与维护。
 10. Phase 3 - 迁移与初始化数据（依赖 Phase 2）
-11. 生成首个 Alembic 迁移版本，确保包含表结构、外键、唯一约束、非空约束和默认值；单独迁移写入固定标签种子数据。
+11. 生成首个 Alembic 迁移版本，确保包含表结构、外键、唯一约束、非空约束和默认值；单独迁移写入初始标签种子数据。
 12. 建立迁移执行规范：本地、测试、生产三套命令与回滚策略（upgrade/downgrade 到指定 revision）；在 README.md 增补“迁移前备份、迁移后校验”流程。
 13. Phase 4 - 应用层接入（与 Phase 3 部分并行，但最终联调依赖迁移完成）
 14. 扩展 backend/app/models/schemas.py：新增 UserCreate、UserLogin、UserProfileUpdate、GoalUpsert、NutritionIntakeCreate/Read、TagRead 等 DTO。
@@ -51,7 +51,7 @@
 **Decisions**
 - 数据库选型：PostgreSQL。
 - 饮食记录范围：四大营养素 + 常见微量营养（calcium、iron、fiber、sodium）。
-- 标签模型：固定枚举标签，不开放用户自由创建。
+- 标签模型：动态标签字典，支持后续扩展。
 - 维护范围：包含 Alembic 迁移规范、审计字段、索引与性能巡检；暂不纳入备份恢复与数据归档自动化。
 
 **Further Considerations**

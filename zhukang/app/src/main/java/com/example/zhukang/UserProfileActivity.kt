@@ -10,11 +10,21 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.zhukang.api.AuthApiService
+import com.example.zhukang.model.ProfileSetupRequest
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.slider.Slider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 class UserProfileActivity : AppCompatActivity() {
+
+    private val authApiService by lazy { AuthApiService.create() }
+    private val fallbackDietOptions = listOf("素食主义", "乳糖不耐受", "外卖狂热选手", "麦质敏感", "坚果过敏", "清真")
 
     private lateinit var etAge: EditText
     private lateinit var etHeight: EditText
@@ -27,6 +37,7 @@ class UserProfileActivity : AppCompatActivity() {
     private lateinit var cgCustomDietTags: ChipGroup
     private lateinit var etCustomDiet: EditText
     private lateinit var btnSubmitProfile: Button
+    private var userId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +54,7 @@ class UserProfileActivity : AppCompatActivity() {
         cgCustomDietTags = findViewById(R.id.cgCustomDietTags)
         etCustomDiet = findViewById(R.id.etCustomDiet)
         btnSubmitProfile = findViewById(R.id.btnSubmitProfile)
+        userId = intent.getStringExtra("user_id")
 
         tvActivityLevelValue.text = "当前：${toActivityLevelLabel(sliderActivityLevel.value.toInt())}"
         sliderActivityLevel.addOnChangeListener { _, value, _ ->
@@ -62,6 +74,43 @@ class UserProfileActivity : AppCompatActivity() {
 
         btnSubmitProfile.setOnClickListener {
             submitProfile()
+        }
+
+        loadPopularDietTags()
+    }
+
+    private fun loadPopularDietTags() {
+        lifecycleScope.launch {
+            val options = withContext(Dispatchers.IO) {
+                runCatching {
+                    authApiService.getPopularTags(limit = 6)
+                }.getOrNull()
+            }
+
+            val tags = if (options?.isSuccessful == true) {
+                options.body()?.items
+                    ?.map { it.displayName.trim() }
+                    ?.filter { it.isNotEmpty() }
+                    ?.distinct()
+                    ?.take(6)
+                    .orEmpty()
+            } else {
+                emptyList()
+            }
+
+            val finalTags = if (tags.isNotEmpty()) tags else fallbackDietOptions
+            renderDietOptionChips(finalTags)
+        }
+    }
+
+    private fun renderDietOptionChips(tags: List<String>) {
+        cgDietOptions.removeAllViews()
+        tags.forEach { label ->
+            val chip = Chip(this).apply {
+                text = label
+                isCheckable = true
+            }
+            cgDietOptions.addView(chip)
         }
     }
 
@@ -93,19 +142,66 @@ class UserProfileActivity : AppCompatActivity() {
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .distinct()
-        val activityLevel = toActivityLevelLabel(sliderActivityLevel.value.toInt())
 
-        // TODO: 后续可将年龄、身高、体重、性别、用户标签、饮食偏好提交到用户资料接口。
-        // 预留接口建议：POST /api/v1/user/profile
-        // Request JSON 建议字段：age, height_cm, weight_kg, gender, user_tag, activity_level, diet_preferences(list)
-
-        val summary = if (mergedDietOptions.isEmpty()) "未选择饮食偏好与限制" else mergedDietOptions.joinToString("、")
-        Toast.makeText(this, "信息提交成功：$activityLevel；$summary", Toast.LENGTH_SHORT).show()
-
-        val intent = Intent(this, LoginActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val userIdValue = userId
+        if (userIdValue.isNullOrBlank()) {
+            Toast.makeText(this, "缺少用户标识，请重新注册", Toast.LENGTH_SHORT).show()
+            return
         }
-        startActivity(intent)
+
+        val ageValue = age.toInt()
+        val heightValue = height.toFloat()
+        val weightValue = weight.toFloat()
+        val sexValue = toSexValue(rgGender.checkedRadioButtonId)
+        val activityLevelValue = toActivityLevelCode(sliderActivityLevel.value)
+        val goalIndex = rgUserTag.indexOfChild(findViewById(rgUserTag.checkedRadioButtonId)).coerceIn(0, 2)
+
+        btnSubmitProfile.isEnabled = false
+        lifecycleScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                runCatching {
+                    authApiService.setupProfile(
+                        ProfileSetupRequest(
+                            userId = userIdValue,
+                            age = ageValue,
+                            sex = sexValue,
+                            heightCm = heightValue,
+                            weightKg = weightValue,
+                            activityLevel = activityLevelValue,
+                            goalIndex = goalIndex,
+                            dietaryPreferences = mergedDietOptions,
+                        )
+                    )
+                }.getOrNull()
+            }
+
+            btnSubmitProfile.isEnabled = true
+
+            if (response == null) {
+                Toast.makeText(this@UserProfileActivity, "网络请求失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            if (!response.isSuccessful || response.body() == null) {
+                Toast.makeText(this@UserProfileActivity, "资料提交失败：${response.code()}", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            Toast.makeText(this@UserProfileActivity, "资料提交成功", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this@UserProfileActivity, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun toSexValue(checkedId: Int): String? {
+        val index = rgGender.indexOfChild(findViewById(checkedId))
+        return when (index) {
+            0 -> "male"
+            1 -> "female"
+            else -> null
+        }
     }
 
     private fun validateBasicInfo(age: String, height: String, weight: String): Boolean {
@@ -201,5 +297,9 @@ class UserProfileActivity : AppCompatActivity() {
             2 -> "中度活动"
             else -> "高频训练"
         }
+    }
+
+    private fun toActivityLevelCode(value: Float): Int {
+        return value.roundToInt().coerceIn(0, 3)
     }
 }

@@ -8,8 +8,16 @@ import android.widget.EditText
 import android.widget.Toast
 import android.text.InputType
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.zhukang.api.AuthApiService
+import com.example.zhukang.model.RegisterRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RegisterActivity : AppCompatActivity() {
+
+    private val authApiService by lazy { AuthApiService.create() }
 
     private lateinit var etRegisterAccount: EditText
     private lateinit var etRegisterPassword: EditText
@@ -61,12 +69,32 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
-        // 预留接口说明：
-        // POST /api/v1/auth/register
-        // Request JSON: {"account": "<账号>", "password": "<密码明文>"}
-        // Response JSON(建议): {"user_id": "...", "account": "..."}
-        // 当前后端尚未实现 auth 路由，本阶段先进入用户信息填写界面。
-        startActivity(Intent(this, UserProfileActivity::class.java))
+        btnSubmitRegister.isEnabled = false
+        lifecycleScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                runCatching {
+                    authApiService.register(RegisterRequest(account = account, password = password))
+                }.getOrNull()
+            }
+
+            btnSubmitRegister.isEnabled = true
+
+            if (response == null) {
+                Toast.makeText(this@RegisterActivity, "网络请求失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            if (!response.isSuccessful || response.body() == null) {
+                Toast.makeText(this@RegisterActivity, "注册失败：${response.code()}", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val body = response.body()!!
+            val intent = Intent(this@RegisterActivity, UserProfileActivity::class.java).apply {
+                putExtra("user_id", body.userId)
+            }
+            startActivity(intent)
+        }
     }
 
     private fun validateRegisterInput(account: String, password: String, confirmPassword: String): Boolean {

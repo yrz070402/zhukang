@@ -34,5 +34,5 @@ alembic history --verbose
 1. Backup database before upgrade.
 2. Run `alembic upgrade head` in staging first.
 3. Verify tables, constraints, and indexes.
-4. Verify fixed tags are seeded in `tags` table.
+4. Verify `tags` table supports dynamic insert/update/delete and existing records remain available.
 5. Keep rollback target revision ready.

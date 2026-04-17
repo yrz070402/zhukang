@@ -1,4 +1,4 @@
-"""seed fixed tags
+"""seed initial tags
 
 Revision ID: 20260413_0002
 Revises: 20260413_0001
