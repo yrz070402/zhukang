@@ -7,10 +7,12 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.slider.Slider
 
 class UserProfileActivity : AppCompatActivity() {
 
@@ -19,6 +21,8 @@ class UserProfileActivity : AppCompatActivity() {
     private lateinit var etWeight: EditText
     private lateinit var rgGender: RadioGroup
     private lateinit var rgUserTag: RadioGroup
+    private lateinit var sliderActivityLevel: Slider
+    private lateinit var tvActivityLevelValue: TextView
     private lateinit var cgDietOptions: ChipGroup
     private lateinit var cgCustomDietTags: ChipGroup
     private lateinit var etCustomDiet: EditText
@@ -33,10 +37,17 @@ class UserProfileActivity : AppCompatActivity() {
         etWeight = findViewById(R.id.etWeight)
         rgGender = findViewById(R.id.rgGender)
         rgUserTag = findViewById(R.id.rgUserTag)
+        sliderActivityLevel = findViewById(R.id.sliderActivityLevel)
+        tvActivityLevelValue = findViewById(R.id.tvActivityLevelValue)
         cgDietOptions = findViewById(R.id.cgDietOptions)
         cgCustomDietTags = findViewById(R.id.cgCustomDietTags)
         etCustomDiet = findViewById(R.id.etCustomDiet)
         btnSubmitProfile = findViewById(R.id.btnSubmitProfile)
+
+        tvActivityLevelValue.text = "当前：${toActivityLevelLabel(sliderActivityLevel.value.toInt())}"
+        sliderActivityLevel.addOnChangeListener { _, value, _ ->
+            tvActivityLevelValue.text = "当前：${toActivityLevelLabel(value.toInt())}"
+        }
 
         etCustomDiet.setOnEditorActionListener { _, actionId, event ->
             val isImeSubmit = actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO
@@ -82,13 +93,14 @@ class UserProfileActivity : AppCompatActivity() {
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .distinct()
+        val activityLevel = toActivityLevelLabel(sliderActivityLevel.value.toInt())
 
         // TODO: 后续可将年龄、身高、体重、性别、用户标签、饮食偏好提交到用户资料接口。
         // 预留接口建议：POST /api/v1/user/profile
-        // Request JSON 建议字段：age, height_cm, weight_kg, gender, user_tag, diet_preferences(list)
+        // Request JSON 建议字段：age, height_cm, weight_kg, gender, user_tag, activity_level, diet_preferences(list)
 
         val summary = if (mergedDietOptions.isEmpty()) "未选择饮食偏好与限制" else mergedDietOptions.joinToString("、")
-        Toast.makeText(this, "信息提交成功：$summary", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "信息提交成功：$activityLevel；$summary", Toast.LENGTH_SHORT).show()
 
         val intent = Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -179,6 +191,15 @@ class UserProfileActivity : AppCompatActivity() {
     private fun isDuplicatedDietTag(label: String): Boolean {
         return (getSelectedDietOptions() + getCustomDietOptions()).any {
             it.equals(label, ignoreCase = true)
+        }
+    }
+
+    private fun toActivityLevelLabel(value: Int): String {
+        return when (value.coerceIn(0, 3)) {
+            0 -> "久坐少动"
+            1 -> "轻度活动"
+            2 -> "中度活动"
+            else -> "高频训练"
         }
     }
 }
