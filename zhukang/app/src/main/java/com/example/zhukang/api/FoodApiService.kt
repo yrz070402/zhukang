@@ -3,6 +3,7 @@ package com.example.zhukang.api
 import com.example.zhukang.model.FoodAnalysisResponse
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -22,7 +23,8 @@ interface FoodApiService {
     // 调试模式
     @POST("api/v1/food/analyze/mock")
     suspend fun analyzeFood(
-        @Part image: MultipartBody.Part
+        @Part image: MultipartBody.Part,
+        @Part("user_id") userId: RequestBody
     ): Response<FoodAnalysisResponse>
 
     companion object {

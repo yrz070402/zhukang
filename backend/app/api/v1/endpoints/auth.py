@@ -6,15 +6,18 @@ import hmac
 import hashlib
 import re
 import secrets
+from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.database import get_db
-from app.models.models import GoalType, SexType, Tag, User, UserGoal, UserProfile, UserTag
+from app.models.models import GoalType, NutritionIntake, SexType, Tag, User, UserGoal, UserProfile, UserTag
 from app.models.schemas import (
     LoginRequest,
     LoginResponse,
@@ -26,10 +29,12 @@ from app.models.schemas import (
     ProfileSetupResponse,
     RegisterRequest,
     RegisterResponse,
+    UserDailyIntakeSummaryResponse,
     UserDailyGoalTargetsResponse,
 )
 
 router = APIRouter()
+settings = get_settings()
 
 GOAL_INDEX_MAP: dict[int, GoalType] = {
     0: GoalType.MUSCLE_GAIN,
@@ -393,4 +398,45 @@ async def get_user_goal_targets(
         target_protein_g=float(user_goal.target_protein_g or 0),
         target_fat_g=float(user_goal.target_fat_g or 0),
         target_carb_g=float(user_goal.target_carb_g or 0),
+    )
+
+
+@router.get("/user/intake-summary", response_model=UserDailyIntakeSummaryResponse)
+async def get_user_daily_intake_summary(
+    user_id: UUID = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> UserDailyIntakeSummaryResponse:
+    now_local = datetime.now(ZoneInfo(settings.timezone))
+    anchor_today = now_local.replace(hour=4, minute=0, second=0, microsecond=0)
+
+    if now_local < anchor_today:
+        start_at = anchor_today - timedelta(days=1)
+        end_at = anchor_today
+    else:
+        start_at = anchor_today
+        end_at = anchor_today + timedelta(days=1)
+
+    result = await db.execute(
+        select(
+            func.coalesce(func.sum(NutritionIntake.energy_kcal), 0).label("total_calories_kcal"),
+            func.coalesce(func.sum(NutritionIntake.protein_g), 0).label("total_protein_g"),
+            func.coalesce(func.sum(NutritionIntake.fat_g), 0).label("total_fat_g"),
+            func.coalesce(func.sum(NutritionIntake.carb_g), 0).label("total_carb_g"),
+        ).where(
+            NutritionIntake.user_id == user_id,
+            NutritionIntake.deleted_at.is_(None),
+            NutritionIntake.intake_time >= start_at,
+            NutritionIntake.intake_time < end_at,
+        )
+    )
+    row = result.one()
+
+    return UserDailyIntakeSummaryResponse(
+        user_id=user_id,
+        start_at=start_at.isoformat(),
+        end_at=end_at.isoformat(),
+        total_calories_kcal=float(row.total_calories_kcal or 0),
+        total_protein_g=float(row.total_protein_g or 0),
+        total_fat_g=float(row.total_fat_g or 0),
+        total_carb_g=float(row.total_carb_g or 0),
     )

@@ -106,3 +106,13 @@ class UserDailyGoalTargetsResponse(BaseModel):
     target_protein_g: float
     target_fat_g: float
     target_carb_g: float
+
+
+class UserDailyIntakeSummaryResponse(BaseModel):
+    user_id: UUID
+    start_at: str
+    end_at: str
+    total_calories_kcal: float
+    total_protein_g: float
+    total_fat_g: float
+    total_carb_g: float
