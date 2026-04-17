@@ -155,18 +155,106 @@
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="健康启航" />
+                        android:text="健康养成" />
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="健身达人" />
+                        android:text="轻松减脂" />
 
                     <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="体态改善" />
+                        android:text="活力塑形" />
                 </RadioGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/zk_surface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="用户运动量"
+                    android:textColor="@color/zk_text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvActivityLevelValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="当前：轻度活动"
+                    android:textColor="@color/zk_text_secondary"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal"
+                    android:weightSum="4">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="start"
+                        android:text="久坐少动"
+                        android:textColor="@color/zk_text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="轻度活动"
+                        android:textColor="@color/zk_text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="中度活动"
+                        android:textColor="@color/zk_text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:text="高频训练"
+                        android:textColor="@color/zk_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sliderActivityLevel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:value="1"
+                    android:stepSize="1"
+                    android:valueFrom="0"
+                    android:valueTo="3" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
