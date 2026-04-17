@@ -7,6 +7,7 @@ import com.example.zhukang.model.ProfileSetupRequest
 import com.example.zhukang.model.ProfileSetupResponse
 import com.example.zhukang.model.RegisterRequest
 import com.example.zhukang.model.RegisterResponse
+import com.example.zhukang.model.UserReportResponse
 import com.example.zhukang.model.UserDailyIntakeSummaryResponse
 import com.example.zhukang.model.UserDailyGoalTargetsResponse
 import okhttp3.OkHttpClient
@@ -66,6 +67,21 @@ interface AuthApiService {
     suspend fun getUserDailyIntakeSummary(
         @Query("user_id") userId: String
     ): Response<UserDailyIntakeSummaryResponse>
+
+    @GET("api/v1/report/daily")
+    suspend fun getDailyReport(
+        @Query("user_id") userId: String
+    ): Response<UserReportResponse>
+
+    @GET("api/v1/report/weekly")
+    suspend fun getWeeklyReport(
+        @Query("user_id") userId: String
+    ): Response<UserReportResponse>
+
+    @GET("api/v1/report/monthly")
+    suspend fun getMonthlyReport(
+        @Query("user_id") userId: String
+    ): Response<UserReportResponse>
 
     companion object {
         private const val BASE_URL = "http://10.0.2.2:8000/"

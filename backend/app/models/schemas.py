@@ -116,3 +116,26 @@ class UserDailyIntakeSummaryResponse(BaseModel):
     total_protein_g: float
     total_fat_g: float
     total_carb_g: float
+
+
+class ReportSeriesPoint(BaseModel):
+    date: str
+    calories_kcal: float | None
+    protein_g: float | None
+    fat_g: float | None
+    carb_g: float | None
+
+
+class ReportGoalLine(BaseModel):
+    calories_kcal: float
+    protein_g: float
+    fat_g: float
+    carb_g: float
+
+
+class UserReportResponse(BaseModel):
+    user_id: UUID
+    start_at: str
+    end_at: str
+    points: list[ReportSeriesPoint]
+    goal_line: ReportGoalLine

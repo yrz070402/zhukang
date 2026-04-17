@@ -2,6 +2,7 @@ package com.example.zhukang
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -28,6 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.zhukang.api.AuthApiService
 import com.example.zhukang.api.FoodApiService
 import com.example.zhukang.model.FoodAnalysisResponse
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -64,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvFat: TextView
     private lateinit var tvCarbs: TextView
     private lateinit var cardDayProgress: CardView
+    private lateinit var fabReportEntry: FloatingActionButton
     private lateinit var tvProgressModeHint: TextView
     private lateinit var tvDayCaloriesValue: TextView
     private lateinit var tvDayProteinValue: TextView
@@ -166,6 +169,10 @@ class MainActivity : AppCompatActivity() {
             renderProgressValues(animate = true)
         }
 
+        fabReportEntry.setOnClickListener {
+            openReportScreen()
+        }
+
         loadUserGoalTargets()
         loadUserDailyIntakeSummary()
     }
@@ -236,6 +243,7 @@ class MainActivity : AppCompatActivity() {
         tvFat = findViewById(R.id.tvFat)
         tvCarbs = findViewById(R.id.tvCarbs)
         cardDayProgress = findViewById(R.id.cardDayProgress)
+        fabReportEntry = findViewById(R.id.fabReportEntry)
         tvProgressModeHint = findViewById(R.id.tvProgressModeHint)
         tvDayCaloriesValue = findViewById(R.id.tvDayCaloriesValue)
         tvDayProteinValue = findViewById(R.id.tvDayProteinValue)
@@ -538,6 +546,19 @@ class MainActivity : AppCompatActivity() {
     private fun toPercent(value: Float, total: Float): Int {
         if (total <= 0f) return 0
         return ((value / total) * 100f).roundToInt().coerceAtLeast(0)
+    }
+
+    // 独立封装临时报表入口，后续替换主导航时可直接移除该方法及 FAB。
+    private fun openReportScreen() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            Toast.makeText(this, "缺少用户信息，请重新登录", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(this, ReportActivity::class.java)
+        intent.putExtra("user_id", userId)
+        startActivity(intent)
     }
 
     /**

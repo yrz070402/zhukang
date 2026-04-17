@@ -44,6 +44,11 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ### 5. 测试接口
 浏览器访问：http://localhost:8000/docs
 
+### 6. 测试数据添加脚本
+需要预先注册用户数据, 脚本文件在./backend/scripts中
+如为用户 test_sparse 添加从当日开始往前12天的数据，运行：
+python generate_test_report_intakes.py --account test_sparse --days 12
+
 ---
 
 ## 二、Android 客户端（Kotlin）
