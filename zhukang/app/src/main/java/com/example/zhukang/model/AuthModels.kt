@@ -74,3 +74,26 @@ data class UserDailyIntakeSummaryResponse(
     @SerializedName("total_fat_g") val totalFatG: Float,
     @SerializedName("total_carb_g") val totalCarbG: Float
 )
+
+data class ReportSeriesPoint(
+    @SerializedName("date") val date: String,
+    @SerializedName("calories_kcal") val caloriesKcal: Float?,
+    @SerializedName("protein_g") val proteinG: Float?,
+    @SerializedName("fat_g") val fatG: Float?,
+    @SerializedName("carb_g") val carbG: Float?
+)
+
+data class ReportGoalLine(
+    @SerializedName("calories_kcal") val caloriesKcal: Float,
+    @SerializedName("protein_g") val proteinG: Float,
+    @SerializedName("fat_g") val fatG: Float,
+    @SerializedName("carb_g") val carbG: Float
+)
+
+data class UserReportResponse(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("start_at") val startAt: String,
+    @SerializedName("end_at") val endAt: String,
+    @SerializedName("points") val points: List<ReportSeriesPoint>,
+    @SerializedName("goal_line") val goalLine: ReportGoalLine
+)

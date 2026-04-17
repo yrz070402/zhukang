@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zk_bg"
-    android:fillViewport="true">
+    android:background="@color/zk_bg">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
+        android:paddingBottom="96dp"
         tools:context=".MainActivity">
 
         <!-- 标题 -->
@@ -546,4 +551,18 @@
             app:layout_constraintTop_toBottomOf="@id/cardDayProgress" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+    </ScrollView>
+
+    <!-- 临时入口：后续可整体删除并替换为正式导航 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabReportEntry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:contentDescription="进入饮食报表"
+        android:src="@android:drawable/ic_menu_sort_by_size"
+        app:backgroundTint="@color/zk_primary"
+        app:tint="@color/zk_on_primary" />
+
+</FrameLayout>
