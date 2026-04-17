@@ -11,6 +11,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -72,11 +73,12 @@ class User(Base, TimestampMixin):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     account: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    nickname: Mapped[str] = mapped_column(String(128), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 
     profile: Mapped[UserProfile | None] = relationship(back_populates="user", uselist=False)
-    goals: Mapped[list[UserGoal]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    goal: Mapped[UserGoal | None] = relationship(back_populates="user", uselist=False)
     tags: Mapped[list[UserTag]] = relationship(back_populates="user", cascade="all, delete-orphan")
     nutrition_intakes: Mapped[list[NutritionIntake]] = relationship(
         back_populates="user",
@@ -115,21 +117,30 @@ class UserGoal(Base, TimestampMixin):
             "target_daily_calories_kcal IS NULL OR target_daily_calories_kcal > 0",
             name="target_daily_calories_positive",
         ),
+        CheckConstraint("target_carb_g IS NULL OR target_carb_g >= 0", name="target_carb_non_negative"),
+        CheckConstraint("target_protein_g IS NULL OR target_protein_g >= 0", name="target_protein_non_negative"),
+        CheckConstraint("target_fat_g IS NULL OR target_fat_g >= 0", name="target_fat_non_negative"),
+        CheckConstraint("activity_level >= 0", name="activity_level_non_negative"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
         nullable=False,
     )
     goal_type: Mapped[GoalType] = mapped_column(Enum(GoalType, name="goal_type"), nullable=False)
+    activity_level: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
     target_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     target_daily_calories_kcal: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    target_carb_g: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    target_protein_g: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    target_fat_g: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 
-    user: Mapped[User] = relationship(back_populates="goals")
+    user: Mapped[User] = relationship(back_populates="goal")
 
 
 class Tag(Base, TimestampMixin):
@@ -196,10 +207,10 @@ class NutritionIntake(Base, TimestampMixin):
     fat_g: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     carb_g: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     protein_g: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
-    calcium_mg: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, server_default="0")
-    iron_mg: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, server_default="0")
-    fiber_g: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, server_default="0")
-    sodium_mg: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, server_default="0")
+    calcium_mg: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    iron_mg: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    fiber_g: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    sodium_mg: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
 
     remark: Mapped[str | None] = mapped_column(Text, nullable=True)
 

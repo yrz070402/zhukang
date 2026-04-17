@@ -3,6 +3,10 @@
 本文件根据 Alembic 迁移脚本整理，数据来源：
 - backend/alembic/versions/20260413_0001_create_core_tables.py
 - backend/alembic/versions/20260413_0002_seed_fixed_tags.py
+- backend/alembic/versions/20260417_0003_update_goal_and_nutrition_constraints.py
+- backend/alembic/versions/20260417_0004_add_user_nickname.py
+- backend/alembic/versions/20260417_0005_add_activity_level_to_user_goals.py
+- backend/alembic/versions/20260417_0006_add_macro_targets_to_user_goals.py
 
 ## 1. 枚举类型（PostgreSQL ENUM）
 
@@ -33,6 +37,7 @@
 |---|---|---|---|---|
 | id | UUID | 否 | - | 主键 |
 | account | VARCHAR(128) | 否 | - | 账号（唯一） |
+| nickname | VARCHAR(128) | 否 | 插入时默认等于 account | 昵称（可修改） |
 | password_hash | VARCHAR(255) | 否 | - | 密码哈希 |
 | is_active | BOOLEAN | 否 | true | 是否启用 |
 | created_at | TIMESTAMP WITH TIME ZONE | 否 | now() | 创建时间 |
@@ -47,7 +52,7 @@
 
 ## 3.2 tags
 
-用途：固定标签字典
+用途：动态标签字典（支持新增/维护）
 
 | 字段 | 类型 | 可空 | 默认值 | 说明 |
 |---|---|---|---|---|
@@ -65,7 +70,7 @@
 2. 唯一约束：uq_tags_code(code)
 3. 唯一约束：uq_tags_display_name(display_name)
 
-种子数据（固定标签）：
+初始种子数据（可扩展，不受固定集合限制）：
 1. fitness_enthusiast / 健身爱好者
 2. chronic_disease / 慢病管理
 3. sub_healthy / 亚健康
@@ -76,15 +81,19 @@
 
 ## 3.3 user_goals
 
-用途：用户目标记录（1 个用户可有多条目标）
+用途：用户目标记录（1 个用户仅保留 1 条当前目标，可更新）
 
 | 字段 | 类型 | 可空 | 默认值 | 说明 |
 |---|---|---|---|---|
 | id | UUID | 否 | - | 主键 |
 | user_id | UUID | 否 | - | 关联 users.id |
 | goal_type | goal_type (ENUM) | 否 | - | 目标类型 |
+| activity_level | FLOAT | 否 | 0 | 运动量等级/系数 |
 | target_weight_kg | NUMERIC(5,2) | 是 | - | 目标体重 |
 | target_daily_calories_kcal | NUMERIC(8,2) | 是 | - | 目标每日热量 |
+| target_carb_g | NUMERIC(8,2) | 是 | - | 目标碳水(g) |
+| target_protein_g | NUMERIC(8,2) | 是 | - | 目标蛋白质(g) |
+| target_fat_g | NUMERIC(8,2) | 是 | - | 目标脂肪(g) |
 | note | TEXT | 是 | - | 备注 |
 | is_active | BOOLEAN | 否 | true | 是否启用 |
 | created_at | TIMESTAMP WITH TIME ZONE | 否 | now() | 创建时间 |
@@ -94,8 +103,13 @@
 约束：
 1. 主键：pk_user_goals(id)
 2. 外键：fk_user_goals_user_id_users(user_id -> users.id, ON DELETE CASCADE)
-3. 检查约束：ck_user_goals_target_weight_positive(target_weight_kg IS NULL OR target_weight_kg > 0)
-4. 检查约束：ck_user_goals_target_daily_calories_positive(target_daily_calories_kcal IS NULL OR target_daily_calories_kcal > 0)
+3. 唯一约束：uq_user_goals_user_id(user_id)
+4. 检查约束：ck_user_goals_activity_level_non_negative(activity_level >= 0)
+5. 检查约束：ck_user_goals_target_weight_positive(target_weight_kg IS NULL OR target_weight_kg > 0)
+6. 检查约束：ck_user_goals_target_daily_calories_positive(target_daily_calories_kcal IS NULL OR target_daily_calories_kcal > 0)
+7. 检查约束：ck_user_goals_target_carb_non_negative(target_carb_g IS NULL OR target_carb_g >= 0)
+8. 检查约束：ck_user_goals_target_protein_non_negative(target_protein_g IS NULL OR target_protein_g >= 0)
+9. 检查约束：ck_user_goals_target_fat_non_negative(target_fat_g IS NULL OR target_fat_g >= 0)
 
 ---
 
@@ -161,10 +175,10 @@
 | fat_g | NUMERIC(8,2) | 否 | - | 脂肪 |
 | carb_g | NUMERIC(8,2) | 否 | - | 碳水 |
 | protein_g | NUMERIC(8,2) | 否 | - | 蛋白质 |
-| calcium_mg | NUMERIC(8,2) | 否 | 0 | 钙 |
-| iron_mg | NUMERIC(8,2) | 否 | 0 | 铁 |
-| fiber_g | NUMERIC(8,2) | 否 | 0 | 膳食纤维 |
-| sodium_mg | NUMERIC(8,2) | 否 | 0 | 钠 |
+| calcium_mg | NUMERIC(8,2) | 是 | - | 钙 |
+| iron_mg | NUMERIC(8,2) | 是 | - | 铁 |
+| fiber_g | NUMERIC(8,2) | 是 | - | 膳食纤维 |
+| sodium_mg | NUMERIC(8,2) | 是 | - | 钠 |
 | remark | TEXT | 是 | - | 备注 |
 | created_at | TIMESTAMP WITH TIME ZONE | 否 | now() | 创建时间 |
 | updated_at | TIMESTAMP WITH TIME ZONE | 否 | now() | 更新时间 |
@@ -190,7 +204,7 @@
 ## 4. 关系摘要
 
 1. users 1 : 1 user_profiles（通过 user_profiles.user_id 唯一约束保证）
-2. users 1 : N user_goals
+2. users 1 : 1 user_goals（当前目标）
 3. users M : N tags（通过 user_tags 实现）
 4. users 1 : N nutrition_intakes
 

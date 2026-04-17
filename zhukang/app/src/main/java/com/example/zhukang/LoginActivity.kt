@@ -9,8 +9,17 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.zhukang.api.AuthApiService
+import com.example.zhukang.model.LoginRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
+
+    private val authApiService by lazy { AuthApiService.create() }
 
     private lateinit var etAccount: EditText
     private lateinit var etPassword: EditText
@@ -51,19 +60,66 @@ class LoginActivity : AppCompatActivity() {
         val account = etAccount.text.toString().trim()
         val password = etPassword.text.toString()
 
+        etAccount.error = null
+        etPassword.error = null
+
         if (!validateLoginInput(account, password)) {
             return
         }
 
-        // 预留接口说明：
-        // POST /api/v1/auth/login
-        // Request JSON: {"account": "<账号>", "password": "<密码明文>"}
-        // Response JSON(建议): {"access_token": "...", "token_type": "bearer", "user_id": "..."}
-        // 当前后端尚未实现 auth 路由，所以这里先直接跳转主界面；后续替换为真实接口调用与结果处理。
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val defaultLoginText = btnLogin.text
+        btnLogin.isEnabled = false
+        btnLogin.text = "登录中..."
+        lifecycleScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                runCatching {
+                    authApiService.login(LoginRequest(account = account, password = password))
+                }.getOrNull()
+            }
+
+            btnLogin.isEnabled = true
+            btnLogin.text = defaultLoginText
+
+            if (response == null) {
+                Toast.makeText(this@LoginActivity, "网络请求失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            if (!response.isSuccessful || response.body() == null) {
+                val detail = runCatching {
+                    val raw = response.errorBody()?.string().orEmpty()
+                    JSONObject(raw).optString("detail")
+                }.getOrNull().orEmpty()
+
+                when (response.code()) {
+                    404 -> {
+                        etAccount.error = if (detail.isNotBlank()) detail else "用户尚未注册"
+                        etAccount.requestFocus()
+                    }
+
+                    401 -> {
+                        etPassword.error = if (detail.isNotBlank()) detail else "密码错误"
+                        etPassword.requestFocus()
+                    }
+
+                    else -> {
+                        if (detail.isNotBlank()) {
+                            Toast.makeText(this@LoginActivity, detail, Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@LoginActivity, "登录失败：${response.code()}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                return@launch
+            }
+
+            val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("user_id", response.body()!!.userId)
+            }
+            startActivity(intent)
         }
-        startActivity(intent)
     }
 
     private fun validateLoginInput(account: String, password: String): Boolean {
@@ -88,7 +144,6 @@ class LoginActivity : AppCompatActivity() {
             return false
         }
 
-        Toast.makeText(this, "登录参数校验通过", Toast.LENGTH_SHORT).show()
         return true
     }
 }

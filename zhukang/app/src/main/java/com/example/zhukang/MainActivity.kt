@@ -25,9 +25,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.zhukang.api.AuthApiService
 import com.example.zhukang.api.FoodApiService
 import com.example.zhukang.model.FoodAnalysisResponse
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -78,23 +81,25 @@ class MainActivity : AppCompatActivity() {
 
     // API Service
     private lateinit var foodApiService: FoodApiService
+    private val authApiService by lazy { AuthApiService.create() }
 
     // 当前拍照的图片 URI
     private var currentPhotoUri: Uri? = null
     private var currentPhotoPath: String? = null
     private var progressDisplayMode = ProgressDisplayMode.PERCENTAGE
 
-    // 当前后端尚未提供数据库进度数据，这组目标值仅作效果展示。
-    private val dailyGoalCalories = 1800f
-    private val dailyGoalProtein = 60f
-    private val dailyGoalFat = 50f
-    private val dailyGoalCarbs = 250f
+    // 默认值仅在首次加载失败时兜底，成功后会替换为后端用户目标。
+    private var dailyGoalCalories = 1800f
+    private var dailyGoalProtein = 60f
+    private var dailyGoalFat = 50f
+    private var dailyGoalCarbs = 250f
 
     // 当前进度数值用于点击切换显示模式，后续可直接替换为后端返回的真实数据。
     private var currentCalories = 0f
     private var currentProtein = 0f
     private var currentFat = 0f
     private var currentCarbs = 0f
+    private var currentUserId: String? = null
 
     companion object {
         private const val TAG = "MainActivity"
@@ -141,6 +146,7 @@ class MainActivity : AppCompatActivity() {
 
         // 初始化 API 服务
         foodApiService = FoodApiService.create()
+        currentUserId = intent.getStringExtra("user_id")
 
         // 设置按钮点击事件
         btnTakePhoto.setOnClickListener {
@@ -158,6 +164,35 @@ class MainActivity : AppCompatActivity() {
                 ProgressDisplayMode.PERCENTAGE
             }
             renderProgressValues(animate = true)
+        }
+
+        loadUserGoalTargets()
+    }
+
+    private fun loadUserGoalTargets() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            Toast.makeText(this, "未检测到用户信息，使用默认目标", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            val response = withContext(Dispatchers.IO) {
+                runCatching { authApiService.getUserGoalTargets(userId) }.getOrNull()
+            }
+
+            if (response?.isSuccessful != true || response.body() == null) {
+                Toast.makeText(this@MainActivity, "加载目标进度失败，使用默认目标", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val body = response.body()!!
+            dailyGoalCalories = body.targetDailyCaloriesKcal.coerceAtLeast(0f)
+            dailyGoalProtein = body.targetProteinG.coerceAtLeast(0f)
+            dailyGoalFat = body.targetFatG.coerceAtLeast(0f)
+            dailyGoalCarbs = body.targetCarbG.coerceAtLeast(0f)
+
+            renderProgressValues()
         }
     }
 

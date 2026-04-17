@@ -322,7 +322,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="当前进度仅作效果展示"
+                    android:text="目标值来自用户档案"
                     android:textColor="@color/zk_text_secondary"
                     android:textSize="11sp" />
 
