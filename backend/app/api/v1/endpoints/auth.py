@@ -31,6 +31,11 @@ from app.models.schemas import (
     RegisterResponse,
     UserDailyIntakeSummaryResponse,
     UserDailyGoalTargetsResponse,
+    UserProfileDetailResponse,
+    UserProfileUpdateRequest,
+    UserTagInfo,
+    UserTagsUpdateRequest,
+    UserTagsUpdateResponse,
 )
 
 router = APIRouter()
@@ -52,6 +57,13 @@ ACTIVITY_LEVEL_ADJUSTMENT: dict[int, Decimal] = {
 GOAL_CALORIE_FACTOR: dict[GoalType, Decimal] = {
     GoalType.MUSCLE_GAIN: Decimal("1.05"),
     GoalType.FAT_LOSS: Decimal("0.80"),
+}
+
+GOAL_TYPE_TO_INDEX: dict[GoalType, int] = {
+    GoalType.MUSCLE_GAIN: 0,
+    GoalType.FAT_LOSS: 1,
+    GoalType.MAINTAIN: 2,
+    GoalType.CHRONIC_DISEASE_MANAGEMENT: 2,
 }
 
 
@@ -196,6 +208,50 @@ def _calculate_target_protein_g(*, sex: SexType, goal_type: GoalType, weight_kg:
     return (weight_decimal * factor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+async def _get_user_tag_items(db: AsyncSession, user_id: UUID) -> list[UserTagInfo]:
+    rows = (
+        await db.execute(
+            select(Tag.id, Tag.display_name)
+            .join(UserTag, UserTag.tag_id == Tag.id)
+            .where(
+                UserTag.user_id == user_id,
+                UserTag.deleted_at.is_(None),
+                Tag.deleted_at.is_(None),
+                Tag.is_active.is_(True),
+            )
+            .order_by(Tag.display_name.asc())
+        )
+    ).all()
+    return [UserTagInfo(id=row.id, display_name=row.display_name) for row in rows]
+
+
+def _serialize_profile_response(
+    *,
+    user: User,
+    profile: UserProfile,
+    goal: UserGoal,
+    tags: list[UserTagInfo],
+) -> UserProfileDetailResponse:
+    return UserProfileDetailResponse(
+        user_id=user.id,
+        account=user.account,
+        nickname=user.nickname,
+        avatar_index=user.avatar_index,
+        age=profile.age,
+        sex=(profile.sex.value if profile.sex else SexType.OTHER.value),
+        height_cm=float(profile.height_cm),
+        weight_kg=float(profile.weight_kg),
+        activity_level=int(goal.activity_level),
+        goal_type=goal.goal_type.value,
+        goal_index=GOAL_TYPE_TO_INDEX.get(goal.goal_type, 2),
+        target_daily_calories_kcal=float(goal.target_daily_calories_kcal or 0),
+        target_protein_g=float(goal.target_protein_g or 0),
+        target_fat_g=float(goal.target_fat_g or 0),
+        target_carb_g=float(goal.target_carb_g or 0),
+        dietary_tags=tags,
+    )
+
+
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)) -> RegisterResponse:
     existing = await db.scalar(select(User).where(User.account == payload.account))
@@ -269,6 +325,9 @@ async def setup_profile(payload: ProfileSetupRequest, db: AsyncSession = Depends
 
     if payload.sex not in (SexType.MALE, SexType.FEMALE):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="sex 仅支持 male/female 用于卡路里计算")
+
+    # 注册资料阶段按性别设置默认头像：女=1，其它=0。
+    user.avatar_index = 1 if payload.sex == SexType.FEMALE else 0
 
     target_daily_calories = _calculate_target_daily_calories(
         age=payload.age,
@@ -398,6 +457,158 @@ async def get_user_goal_targets(
         target_protein_g=float(user_goal.target_protein_g or 0),
         target_fat_g=float(user_goal.target_fat_g or 0),
         target_carb_g=float(user_goal.target_carb_g or 0),
+    )
+
+
+@router.get("/user/profile", response_model=UserProfileDetailResponse)
+async def get_user_profile(
+    user_id: UUID = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> UserProfileDetailResponse:
+    user = await db.scalar(select(User).where(User.id == user_id, User.deleted_at.is_(None)))
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+
+    profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
+    if not profile:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户资料不存在")
+
+    goal = await db.scalar(
+        select(UserGoal).where(
+            UserGoal.user_id == user_id,
+            UserGoal.deleted_at.is_(None),
+            UserGoal.is_active.is_(True),
+        )
+    )
+    if not goal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户目标不存在")
+
+    tags = await _get_user_tag_items(db, user_id)
+    return _serialize_profile_response(user=user, profile=profile, goal=goal, tags=tags)
+
+
+@router.patch("/user/profile", response_model=UserProfileDetailResponse)
+async def patch_user_profile(
+    payload: UserProfileUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+) -> UserProfileDetailResponse:
+    user = await db.scalar(select(User).where(User.id == payload.user_id, User.deleted_at.is_(None)))
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+
+    profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == payload.user_id))
+    if not profile:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户资料不存在")
+
+    goal = await db.scalar(
+        select(UserGoal).where(
+            UserGoal.user_id == payload.user_id,
+            UserGoal.deleted_at.is_(None),
+            UserGoal.is_active.is_(True),
+        )
+    )
+    if not goal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户目标不存在")
+
+    if payload.sex not in (SexType.MALE, SexType.FEMALE):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="sex 仅支持 male/female")
+
+    nickname = payload.nickname.strip()
+    if not nickname:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="昵称不能为空")
+
+    user.nickname = nickname
+    user.avatar_index = payload.avatar_index
+
+    profile.age = payload.age
+    profile.sex = payload.sex
+    profile.height_cm = payload.height_cm
+    profile.weight_kg = payload.weight_kg
+
+    goal.goal_type = payload.goal_type
+    goal.activity_level = payload.activity_level
+
+    recalculated_calories = _calculate_target_daily_calories(
+        age=payload.age,
+        sex=payload.sex,
+        height_cm=payload.height_cm,
+        weight_kg=payload.weight_kg,
+        activity_level=payload.activity_level,
+        goal_type=payload.goal_type,
+    )
+    recalculated_fat = _calculate_target_fat_g(
+        sex=payload.sex,
+        goal_type=payload.goal_type,
+        weight_kg=payload.weight_kg,
+    )
+    recalculated_carb = _calculate_target_carb_g(
+        sex=payload.sex,
+        goal_type=payload.goal_type,
+        weight_kg=payload.weight_kg,
+    )
+    recalculated_protein = _calculate_target_protein_g(
+        sex=payload.sex,
+        goal_type=payload.goal_type,
+        weight_kg=payload.weight_kg,
+    )
+
+    goal.target_daily_calories_kcal = (
+        Decimal(str(payload.target_daily_calories_kcal))
+        if payload.target_daily_calories_kcal is not None
+        else recalculated_calories
+    )
+    goal.target_protein_g = (
+        Decimal(str(payload.target_protein_g))
+        if payload.target_protein_g is not None
+        else recalculated_protein
+    )
+    goal.target_fat_g = (
+        Decimal(str(payload.target_fat_g))
+        if payload.target_fat_g is not None
+        else recalculated_fat
+    )
+    goal.target_carb_g = (
+        Decimal(str(payload.target_carb_g))
+        if payload.target_carb_g is not None
+        else recalculated_carb
+    )
+
+    await db.commit()
+
+    tags = await _get_user_tag_items(db, payload.user_id)
+    return _serialize_profile_response(user=user, profile=profile, goal=goal, tags=tags)
+
+
+@router.put("/user/tags", response_model=UserTagsUpdateResponse)
+async def put_user_tags(
+    payload: UserTagsUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+) -> UserTagsUpdateResponse:
+    user = await db.scalar(select(User).where(User.id == payload.user_id, User.deleted_at.is_(None)))
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+
+    await db.execute(delete(UserTag).where(UserTag.user_id == payload.user_id))
+
+    tag_ids: list[int] = []
+    seen: set[str] = set()
+    for preference in payload.dietary_preferences:
+        normalized = preference.strip().lower()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        tag = await _resolve_or_create_tag(db, preference.strip())
+        db.add(UserTag(user_id=payload.user_id, tag_id=tag.id))
+        tag_ids.append(tag.id)
+
+    await db.commit()
+
+    tags = await _get_user_tag_items(db, payload.user_id)
+    return UserTagsUpdateResponse(
+        user_id=payload.user_id,
+        tag_ids=tag_ids,
+        tags=tags,
+        message="用户标签已更新",
     )
 
 

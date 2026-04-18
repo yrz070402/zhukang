@@ -7,6 +7,7 @@
 - backend/alembic/versions/20260417_0004_add_user_nickname.py
 - backend/alembic/versions/20260417_0005_add_activity_level_to_user_goals.py
 - backend/alembic/versions/20260417_0006_add_macro_targets_to_user_goals.py
+- backend/alembic/versions/20260418_0007_add_avatar_index_to_users.py
 
 ## 1. 枚举类型（PostgreSQL ENUM）
 
@@ -38,6 +39,7 @@
 | id | UUID | 否 | - | 主键 |
 | account | VARCHAR(128) | 否 | - | 账号（唯一） |
 | nickname | VARCHAR(128) | 否 | 插入时默认等于 account | 昵称（可修改） |
+| avatar_index | INTEGER | 否 | 0 | 头像索引（0-11） |
 | password_hash | VARCHAR(255) | 否 | - | 密码哈希 |
 | is_active | BOOLEAN | 否 | true | 是否启用 |
 | created_at | TIMESTAMP WITH TIME ZONE | 否 | now() | 创建时间 |
@@ -47,6 +49,7 @@
 约束：
 1. 主键：pk_users(id)
 2. 唯一约束：uq_users_account(account)
+3. 检查约束：ck_users_avatar_index_range(avatar_index >= 0 AND avatar_index <= 11)
 
 ---
 

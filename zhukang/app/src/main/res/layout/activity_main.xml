@@ -555,6 +555,18 @@
 
     <!-- 临时入口：后续可整体删除并替换为正式导航 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabProfileEntry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="92dp"
+        android:contentDescription="进入个人资料"
+        android:src="@android:drawable/ic_menu_manage"
+        app:backgroundTint="@color/zk_secondary"
+        app:tint="@color/zk_text_primary" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabReportEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

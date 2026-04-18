@@ -74,6 +74,7 @@ class User(Base, TimestampMixin):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     account: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     nickname: Mapped[str] = mapped_column(String(128), nullable=False)
+    avatar_index: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 

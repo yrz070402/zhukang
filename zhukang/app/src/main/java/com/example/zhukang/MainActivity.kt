@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvFat: TextView
     private lateinit var tvCarbs: TextView
     private lateinit var cardDayProgress: CardView
+    private lateinit var fabProfileEntry: FloatingActionButton
     private lateinit var fabReportEntry: FloatingActionButton
     private lateinit var tvProgressModeHint: TextView
     private lateinit var tvDayCaloriesValue: TextView
@@ -173,6 +174,10 @@ class MainActivity : AppCompatActivity() {
             openReportScreen()
         }
 
+        fabProfileEntry.setOnClickListener {
+            openPersonalProfileScreen()
+        }
+
         loadUserGoalTargets()
         loadUserDailyIntakeSummary()
     }
@@ -243,6 +248,7 @@ class MainActivity : AppCompatActivity() {
         tvFat = findViewById(R.id.tvFat)
         tvCarbs = findViewById(R.id.tvCarbs)
         cardDayProgress = findViewById(R.id.cardDayProgress)
+        fabProfileEntry = findViewById(R.id.fabProfileEntry)
         fabReportEntry = findViewById(R.id.fabReportEntry)
         tvProgressModeHint = findViewById(R.id.tvProgressModeHint)
         tvDayCaloriesValue = findViewById(R.id.tvDayCaloriesValue)
@@ -557,6 +563,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         val intent = Intent(this, ReportActivity::class.java)
+        intent.putExtra("user_id", userId)
+        startActivity(intent)
+    }
+
+    // 独立封装临时个人资料入口，后续替换主导航时可直接移除该方法及 FAB。
+    private fun openPersonalProfileScreen() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            Toast.makeText(this, "缺少用户信息，请重新登录", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(this, PersonalProfileActivity::class.java)
         intent.putExtra("user_id", userId)
         startActivity(intent)
     }
