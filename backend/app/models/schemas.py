@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models.models import SexType
+from app.models.models import GoalType, SexType
 
 
 class FoodAnalysisResponse(BaseModel):
@@ -139,3 +139,63 @@ class UserReportResponse(BaseModel):
     end_at: str
     points: list[ReportSeriesPoint]
     goal_line: ReportGoalLine
+
+
+class UserTagInfo(BaseModel):
+    id: int
+    display_name: str
+
+
+class UserProfileDetailResponse(BaseModel):
+    user_id: UUID
+    account: str
+    nickname: str
+    avatar_index: int
+    age: int
+    sex: str
+    height_cm: float
+    weight_kg: float
+    activity_level: int
+    goal_type: str
+    goal_index: int
+    target_daily_calories_kcal: float
+    target_protein_g: float
+    target_fat_g: float
+    target_carb_g: float
+    dietary_tags: list[UserTagInfo]
+
+
+class UserProfileUpdateRequest(BaseModel):
+    user_id: UUID
+    nickname: str = Field(min_length=1, max_length=128)
+    avatar_index: int = Field(ge=0, le=11)
+    age: int = Field(ge=1, le=120)
+    sex: SexType
+    height_cm: float = Field(gt=0)
+    weight_kg: float = Field(gt=0)
+    activity_level: int = Field(ge=0, le=3)
+    goal_type: GoalType
+    target_daily_calories_kcal: float | None = Field(default=None, gt=0)
+    target_protein_g: float | None = Field(default=None, ge=0)
+    target_fat_g: float | None = Field(default=None, ge=0)
+    target_carb_g: float | None = Field(default=None, ge=0)
+
+
+class UserTagsUpdateRequest(BaseModel):
+    user_id: UUID
+    dietary_preferences: list[str] = Field(default_factory=list)
+
+    @field_validator("dietary_preferences")
+    @classmethod
+    def validate_dietary_preferences(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value if item and item.strip()]
+        if len(cleaned) != len(set(cleaned)):
+            raise ValueError("dietary_preferences contains duplicate values")
+        return cleaned
+
+
+class UserTagsUpdateResponse(BaseModel):
+    user_id: UUID
+    tag_ids: list[int]
+    tags: list[UserTagInfo]
+    message: str

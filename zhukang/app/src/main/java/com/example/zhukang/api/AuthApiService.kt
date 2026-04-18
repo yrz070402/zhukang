@@ -7,16 +7,22 @@ import com.example.zhukang.model.ProfileSetupRequest
 import com.example.zhukang.model.ProfileSetupResponse
 import com.example.zhukang.model.RegisterRequest
 import com.example.zhukang.model.RegisterResponse
+import com.example.zhukang.model.UserProfileDetailResponse
+import com.example.zhukang.model.UserProfileUpdateRequest
 import com.example.zhukang.model.UserReportResponse
 import com.example.zhukang.model.UserDailyIntakeSummaryResponse
 import com.example.zhukang.model.UserDailyGoalTargetsResponse
+import com.example.zhukang.model.UserTagsUpdateRequest
+import com.example.zhukang.model.UserTagsUpdateResponse
 import okhttp3.OkHttpClient
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
@@ -67,6 +73,21 @@ interface AuthApiService {
     suspend fun getUserDailyIntakeSummary(
         @Query("user_id") userId: String
     ): Response<UserDailyIntakeSummaryResponse>
+
+    @GET("api/v1/auth/user/profile")
+    suspend fun getUserProfile(
+        @Query("user_id") userId: String
+    ): Response<UserProfileDetailResponse>
+
+    @PATCH("api/v1/auth/user/profile")
+    suspend fun patchUserProfile(
+        @Body request: UserProfileUpdateRequest
+    ): Response<UserProfileDetailResponse>
+
+    @PUT("api/v1/auth/user/tags")
+    suspend fun putUserTags(
+        @Body request: UserTagsUpdateRequest
+    ): Response<UserTagsUpdateResponse>
 
     @GET("api/v1/report/daily")
     suspend fun getDailyReport(

@@ -97,3 +97,55 @@ data class UserReportResponse(
     @SerializedName("points") val points: List<ReportSeriesPoint>,
     @SerializedName("goal_line") val goalLine: ReportGoalLine
 )
+
+data class UserTagInfo(
+    @SerializedName("id") val id: Int,
+    @SerializedName("display_name") val displayName: String
+)
+
+data class UserProfileDetailResponse(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("account") val account: String,
+    @SerializedName("nickname") val nickname: String,
+    @SerializedName("avatar_index") val avatarIndex: Int,
+    @SerializedName("age") val age: Int,
+    @SerializedName("sex") val sex: String,
+    @SerializedName("height_cm") val heightCm: Float,
+    @SerializedName("weight_kg") val weightKg: Float,
+    @SerializedName("activity_level") val activityLevel: Int,
+    @SerializedName("goal_type") val goalType: String,
+    @SerializedName("goal_index") val goalIndex: Int,
+    @SerializedName("target_daily_calories_kcal") val targetDailyCaloriesKcal: Float,
+    @SerializedName("target_protein_g") val targetProteinG: Float,
+    @SerializedName("target_fat_g") val targetFatG: Float,
+    @SerializedName("target_carb_g") val targetCarbG: Float,
+    @SerializedName("dietary_tags") val dietaryTags: List<UserTagInfo>
+)
+
+data class UserProfileUpdateRequest(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("nickname") val nickname: String,
+    @SerializedName("avatar_index") val avatarIndex: Int,
+    @SerializedName("age") val age: Int,
+    @SerializedName("sex") val sex: String,
+    @SerializedName("height_cm") val heightCm: Float,
+    @SerializedName("weight_kg") val weightKg: Float,
+    @SerializedName("activity_level") val activityLevel: Int,
+    @SerializedName("goal_type") val goalType: String,
+    @SerializedName("target_daily_calories_kcal") val targetDailyCaloriesKcal: Float? = null,
+    @SerializedName("target_protein_g") val targetProteinG: Float? = null,
+    @SerializedName("target_fat_g") val targetFatG: Float? = null,
+    @SerializedName("target_carb_g") val targetCarbG: Float? = null,
+)
+
+data class UserTagsUpdateRequest(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("dietary_preferences") val dietaryPreferences: List<String>
+)
+
+data class UserTagsUpdateResponse(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("tag_ids") val tagIds: List<Int>,
+    @SerializedName("tags") val tags: List<UserTagInfo>,
+    @SerializedName("message") val message: String,
+)
