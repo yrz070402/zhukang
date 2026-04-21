@@ -1,8 +1,10 @@
 """
 食物分析接口 - 调用豆包大模型 Vision API
 """
+import uuid
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -15,6 +17,7 @@ from app.core.database import get_db
 from app.models.models import MealType, NutritionIntake, User
 from app.models.schemas import FoodAnalysisResponse
 from app.services.doubao_service import analyze_food_image
+from app.utils.image_cutout import build_thumbnail_png
 from app.utils.image_processor import ImageProcessor
 import cv2
 import numpy as np
@@ -26,23 +29,41 @@ image_processor = ImageProcessor(max_size=1024)
 settings = get_settings()
 
 
-def _decode_preprocess_and_encode(contents: bytes) -> bytes:
-    """
-    统一处理上传图片：解码 -> 预处理 -> JPEG 编码
-    """
+def _decode_preprocess_image(contents: bytes) -> np.ndarray:
+    """解码上传图片并走预处理，返回 OpenCV BGR 数组。"""
     np_arr = np.frombuffer(contents, np.uint8)
     cv_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     if cv_image is None:
         raise HTTPException(status_code=400, detail="无法解析图片，请检查格式")
+    return image_processor.preprocess_image(cv_image)
 
-    # 暂时不进行 ROI 检测，直接预处理整个图片
-    processed_image = image_processor.preprocess_image(cv_image)
 
+def _encode_jpeg(processed_image: np.ndarray) -> bytes:
+    """把预处理后的 BGR 图像编码为 JPEG bytes 供豆包识别使用。"""
     ok, encoded = cv2.imencode(".jpg", processed_image, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
     if not ok:
         raise HTTPException(status_code=500, detail="图片预处理后编码失败")
-
     return encoded.tobytes()
+
+
+def _persist_thumbnail(user_id: UUID, processed_image: np.ndarray) -> str:
+    """
+    生成并落盘 Bitelog 圆形缩略图，返回可通过 /static 访问的相对路径。
+
+    目录结构：storage/food_images/{user_id}/{YYYYMM}/{uuid}.png
+    """
+    png_bytes = build_thumbnail_png(processed_image, size=256)
+
+    now_local = datetime.now(ZoneInfo(settings.timezone))
+    sub_dir = Path(settings.food_image_subdir) / str(user_id) / now_local.strftime("%Y%m")
+    abs_dir = Path(settings.static_root) / sub_dir
+    abs_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{uuid.uuid4().hex}.png"
+    abs_path = abs_dir / filename
+    abs_path.write_bytes(png_bytes)
+
+    return f"/static/{sub_dir.as_posix()}/{filename}"
 
 
 def _resolve_meal_type(dt: datetime) -> MealType:
@@ -72,6 +93,7 @@ async def _insert_nutrition_intake(
     db: AsyncSession,
     user_id: UUID,
     result: FoodAnalysisResponse,
+    image_url: str | None = None,
 ) -> None:
     intake_time = datetime.now(ZoneInfo(settings.timezone))
     meal_type = _resolve_meal_type(intake_time)
@@ -85,6 +107,7 @@ async def _insert_nutrition_intake(
         fat_g=Decimal(str(result.fat or 0)),
         carb_g=Decimal(str(result.carbs or 0)),
         protein_g=Decimal(str(result.protein)),
+        image_url=image_url,
         created_at=intake_time,
         updated_at=intake_time,
     )
@@ -125,12 +148,22 @@ async def analyze_food(
     logger.info(f"图片上传: {image.filename}, 大小: {len(contents)} bytes")
 
     try:
-        processed_bytes = _decode_preprocess_and_encode(contents)
+        processed_image = _decode_preprocess_image(contents)
+        processed_bytes = _encode_jpeg(processed_image)
         logger.info(f"图片预处理完成: 原始={len(contents)} bytes, 预处理后={len(processed_bytes)} bytes")
 
         # 调用豆包 API 分析食物
         result = await analyze_food_image(processed_bytes, image.filename or "food.jpg")
-        await _insert_nutrition_intake(db, user_id, result)
+
+        # 抠图落盘，失败不阻断主流程
+        image_url: str | None = None
+        try:
+            image_url = _persist_thumbnail(user_id, processed_image)
+            result.image_url = image_url
+        except Exception as thumb_err:
+            logger.warning(f"Bitelog 缩略图落盘失败，忽略: {thumb_err}")
+
+        await _insert_nutrition_intake(db, user_id, result, image_url=image_url)
 
         print(f"[RESULT] 分析结果: {result.model_dump()}")
         return result
@@ -162,7 +195,8 @@ async def analyze_food_mock(
     logger.info(f"[MOCK] 图片上传: {image.filename}, 大小: {len(contents)} bytes")
 
     try:
-        processed_bytes = _decode_preprocess_and_encode(contents)
+        processed_image = _decode_preprocess_image(contents)
+        processed_bytes = _encode_jpeg(processed_image)
         logger.info(
             f"[MOCK] 图片预处理完成: 原始={len(contents)} bytes, 预处理后={len(processed_bytes)} bytes"
         )
@@ -175,7 +209,15 @@ async def analyze_food_mock(
             fat=15.0,
             carbs=280.0
         )
-        await _insert_nutrition_intake(db, user_id, result)
+
+        image_url: str | None = None
+        try:
+            image_url = _persist_thumbnail(user_id, processed_image)
+            result.image_url = image_url
+        except Exception as thumb_err:
+            logger.warning(f"[MOCK] Bitelog 缩略图落盘失败，忽略: {thumb_err}")
+
+        await _insert_nutrition_intake(db, user_id, result, image_url=image_url)
         return result
 
     except HTTPException:

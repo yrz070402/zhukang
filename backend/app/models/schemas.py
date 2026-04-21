@@ -16,6 +16,7 @@ class FoodAnalysisResponse(BaseModel):
     protein: float
     fat: Optional[float] = None
     carbs: Optional[float] = None
+    image_url: Optional[str] = None
 
     class Config:
         json_schema_extra = {
@@ -24,7 +25,8 @@ class FoodAnalysisResponse(BaseModel):
                 "calories": 450.0,
                 "protein": 20.0,
                 "fat": 15.0,
-                "carbs": 50.0
+                "carbs": 50.0,
+                "image_url": "/static/food_images/xxx.png"
             }
         }
 
@@ -199,3 +201,33 @@ class UserTagsUpdateResponse(BaseModel):
     tag_ids: list[int]
     tags: list[UserTagInfo]
     message: str
+
+
+class DietMapIntakeItem(BaseModel):
+    """Bitelog 网格中的单条餐次条目。"""
+    id: UUID
+    intake_time: str
+    meal_type: str
+    food_name: str
+    image_url: Optional[str] = None
+    calories_kcal: float
+    protein_g: float
+    fat_g: float
+    carb_g: float
+
+
+class DietMapDay(BaseModel):
+    """Bitelog 网格一天的聚合结果。"""
+    business_day: str
+    weekday: int  # ISO 周几：1=周一 ... 7=周日
+    intakes: list[DietMapIntakeItem]
+
+
+class DietMapResponse(BaseModel):
+    """Bitelog 网格接口整体响应。"""
+    user_id: UUID
+    period: str  # weekly 或 monthly
+    offset: int
+    start_at: str
+    end_at: str
+    days: list[DietMapDay]

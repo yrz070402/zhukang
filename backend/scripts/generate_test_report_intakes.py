@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import io
 import random
 import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict
+from pathlib import Path
+from typing import Dict, List
 from zoneinfo import ZoneInfo
 
+from PIL import Image, ImageDraw
 from sqlalchemy import delete, select
 
 from app.core.config import get_settings
@@ -100,6 +103,44 @@ def ensure_ratio(total: Decimal, target: Decimal, metric_name: str) -> None:
         raise ValueError(f"{metric_name} ratio out of range: {ratio}")
 
 
+MEAL_COLOR_PALETTE = {
+    MealType.BREAKFAST: (245, 178, 102, 255),  # 暖橙
+    MealType.LUNCH: (229, 125, 71, 255),       # 深橙
+    MealType.DINNER: (180, 91, 45, 255),       # 赤陶
+    MealType.SNACK: (246, 200, 145, 255),      # 浅杏
+}
+
+
+def _generate_dummy_thumbnail(meal_type: MealType, size: int = 256) -> bytes:
+    """
+    生成一个简易的圆形 PNG 占位图（无需真实抠图），用于填充 image_url 做联调。
+    """
+    color = MEAL_COLOR_PALETTE.get(meal_type, (240, 170, 110, 255))
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(canvas)
+    draw.ellipse((0, 0, size, size), fill=color)
+
+    # 中心叠加一个浅色小圆，增强“抠图”质感。
+    inset = size // 5
+    highlight_color = (255, 255, 255, 80)
+    draw.ellipse((inset, inset, size - inset, size - inset), fill=highlight_color)
+
+    buffer = io.BytesIO()
+    canvas.save(buffer, format="PNG", optimize=True)
+    return buffer.getvalue()
+
+
+def _persist_dummy_thumbnail(settings, user_id: uuid.UUID, meal_type: MealType, day: date) -> str:
+    """写入占位 PNG 并返回 /static 相对地址。"""
+    sub_dir = Path(settings.food_image_subdir) / str(user_id) / day.strftime("%Y%m")
+    abs_dir = Path(settings.static_root) / sub_dir
+    abs_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{uuid.uuid4().hex}.png"
+    (abs_dir / filename).write_bytes(_generate_dummy_thumbnail(meal_type))
+    return f"/static/{sub_dir.as_posix()}/{filename}"
+
+
 async def generate(account: str, days: int, seed: int | None) -> None:
     if seed is not None:
         random.seed(seed)
@@ -178,6 +219,8 @@ async def generate(account: str, days: int, seed: int | None) -> None:
                 food_name = random.choice(foods)
                 portion = f"{random.randint(1, 2)} serving"
 
+                image_url = _persist_dummy_thumbnail(settings, user.id, meal_type, current_day)
+
                 rows_to_insert.append(
                     NutritionIntake(
                         id=uuid.uuid4(),
@@ -195,6 +238,7 @@ async def generate(account: str, days: int, seed: int | None) -> None:
                         iron_mg=None,
                         fiber_g=None,
                         sodium_mg=None,
+                        image_url=image_url,
                         remark="auto generated for test_report",
                     )
                 )

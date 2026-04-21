@@ -149,3 +149,30 @@ data class UserTagsUpdateResponse(
     @SerializedName("tags") val tags: List<UserTagInfo>,
     @SerializedName("message") val message: String,
 )
+
+data class DietMapIntakeItem(
+    @SerializedName("id") val id: String,
+    @SerializedName("intake_time") val intakeTime: String,
+    @SerializedName("meal_type") val mealType: String,
+    @SerializedName("food_name") val foodName: String,
+    @SerializedName("image_url") val imageUrl: String?,
+    @SerializedName("calories_kcal") val caloriesKcal: Float,
+    @SerializedName("protein_g") val proteinG: Float,
+    @SerializedName("fat_g") val fatG: Float,
+    @SerializedName("carb_g") val carbG: Float
+)
+
+data class DietMapDay(
+    @SerializedName("business_day") val businessDay: String,
+    @SerializedName("weekday") val weekday: Int,
+    @SerializedName("intakes") val intakes: List<DietMapIntakeItem>
+)
+
+data class DietMapResponse(
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("period") val period: String,
+    @SerializedName("offset") val offset: Int,
+    @SerializedName("start_at") val startAt: String,
+    @SerializedName("end_at") val endAt: String,
+    @SerializedName("days") val days: List<DietMapDay>
+)

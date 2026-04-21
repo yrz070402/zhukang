@@ -61,6 +61,9 @@ dependencies {
     // 图表
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
+    // 图片加载（Bitelog 缩略图）
+    implementation("io.coil-kt:coil:2.6.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

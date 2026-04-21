@@ -1,6 +1,8 @@
 """用户营养报表接口（日/周/月）。"""
 from __future__ import annotations
 
+import calendar
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -12,7 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.models.models import MealType, NutritionIntake, UserGoal
-from app.models.schemas import ReportGoalLine, ReportSeriesPoint, UserReportResponse
+from app.models.schemas import (
+    DietMapDay,
+    DietMapIntakeItem,
+    DietMapResponse,
+    ReportGoalLine,
+    ReportSeriesPoint,
+    UserReportResponse,
+)
 
 router = APIRouter()
 settings = get_settings()
@@ -212,3 +221,116 @@ async def get_monthly_report(
     db: AsyncSession = Depends(get_db),
 ) -> UserReportResponse:
     return await _build_report(user_id=user_id, days=30, db=db)
+
+
+def _resolve_bitelog_window(
+    now_local: datetime, period: str, offset: int
+) -> tuple[datetime, datetime, date, date]:
+    """
+    Bitelog 网格按业务日划分，0 表示当前周/月，-1 表示上一期，以此类推。
+
+    返回 (window_start, window_end, first_business_day, last_business_day)。
+    """
+    anchor_today = now_local.replace(hour=4, minute=0, second=0, microsecond=0)
+    if now_local < anchor_today:
+        current_business_day = (anchor_today - timedelta(days=1)).date()
+    else:
+        current_business_day = anchor_today.date()
+
+    tz = now_local.tzinfo
+
+    if period == "weekly":
+        # ISO 周：周一为首日。
+        week_start = current_business_day - timedelta(days=current_business_day.weekday())
+        first_day = week_start + timedelta(weeks=offset)
+        last_day = first_day + timedelta(days=6)
+    else:
+        year = current_business_day.year
+        month = current_business_day.month + offset
+        # 处理月份溢出。
+        year += (month - 1) // 12
+        month = (month - 1) % 12 + 1
+        first_day = date(year, month, 1)
+        last_day_index = calendar.monthrange(year, month)[1]
+        last_day = date(year, month, last_day_index)
+
+    window_start = datetime.combine(first_day, datetime.min.time(), tzinfo=tz).replace(hour=4)
+    window_end = datetime.combine(last_day + timedelta(days=1), datetime.min.time(), tzinfo=tz).replace(hour=4)
+    return window_start, window_end, first_day, last_day
+
+
+@router.get("/diet-map", response_model=DietMapResponse)
+async def get_diet_map(
+    user_id: UUID = Query(...),
+    period: str = Query("weekly", pattern="^(weekly|monthly)$"),
+    offset: int = Query(0),
+    db: AsyncSession = Depends(get_db),
+) -> DietMapResponse:
+    """
+    Bitelog 网格数据：按天聚合餐次记录，附带缩略图 URL 与营养明细。
+    """
+    tz = ZoneInfo(settings.timezone)
+    now_local = datetime.now(tz)
+    window_start, window_end, first_day, last_day = _resolve_bitelog_window(now_local, period, offset)
+
+    date_expr = func.date(func.timezone(settings.timezone, NutritionIntake.intake_time))
+    rows = (
+        await db.execute(
+            select(
+                NutritionIntake.id,
+                NutritionIntake.intake_time,
+                NutritionIntake.meal_type,
+                NutritionIntake.food_name,
+                NutritionIntake.image_url,
+                NutritionIntake.energy_kcal,
+                NutritionIntake.protein_g,
+                NutritionIntake.fat_g,
+                NutritionIntake.carb_g,
+                date_expr.label("business_day"),
+            )
+            .where(
+                NutritionIntake.user_id == user_id,
+                NutritionIntake.deleted_at.is_(None),
+                NutritionIntake.intake_time >= window_start,
+                NutritionIntake.intake_time < window_end,
+            )
+            .order_by(NutritionIntake.intake_time.asc())
+        )
+    ).all()
+
+    grouped: dict[date, list[DietMapIntakeItem]] = defaultdict(list)
+    for row in rows:
+        grouped[row.business_day].append(
+            DietMapIntakeItem(
+                id=row.id,
+                intake_time=row.intake_time.isoformat(),
+                meal_type=row.meal_type.value if hasattr(row.meal_type, "value") else str(row.meal_type),
+                food_name=row.food_name,
+                image_url=row.image_url,
+                calories_kcal=float(row.energy_kcal or 0),
+                protein_g=float(row.protein_g or 0),
+                fat_g=float(row.fat_g or 0),
+                carb_g=float(row.carb_g or 0),
+            )
+        )
+
+    days: list[DietMapDay] = []
+    total_days = (last_day - first_day).days + 1
+    for offset_day in range(total_days):
+        current = first_day + timedelta(days=offset_day)
+        days.append(
+            DietMapDay(
+                business_day=current.isoformat(),
+                weekday=current.isoweekday(),
+                intakes=grouped.get(current, []),
+            )
+        )
+
+    return DietMapResponse(
+        user_id=user_id,
+        period=period,
+        offset=offset,
+        start_at=window_start.isoformat(),
+        end_at=window_end.isoformat(),
+        days=days,
+    )

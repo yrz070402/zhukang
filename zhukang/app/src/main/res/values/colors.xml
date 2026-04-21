@@ -20,4 +20,6 @@
     <color name="zk_progress_level_yellow">#D69A2D</color>
     <color name="zk_progress_level_green">#63B65A</color>
     <color name="zk_error">#B3261E</color>
+    <color name="zk_bitelog_empty_stroke">#E7D3BE</color>
+    <color name="zk_bitelog_empty_bg">#FFF4E7</color>
 </resources>

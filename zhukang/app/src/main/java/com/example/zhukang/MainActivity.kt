@@ -28,6 +28,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.zhukang.api.AuthApiService
 import com.example.zhukang.api.FoodApiService
+import coil.load
+import com.example.zhukang.api.BackendUrls
 import com.example.zhukang.model.FoodAnalysisResponse
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
@@ -445,6 +447,11 @@ class MainActivity : AppCompatActivity() {
         tvProtein.text = response.protein.toInt().toString()
         tvFat.text = response.fat.toInt().toString()
         tvCarbs.text = response.carbs.toInt().toString()
+
+        // 若后端返回了抠图后的缩略图 URL，则替换当前预览图，呈现 Bitelog 同款效果。
+        response.imageUrl?.takeIf { it.isNotBlank() }?.let { imageUrl ->
+            ivFoodImage.load(BackendUrls.absolutize(imageUrl))
+        }
 
         cardResult.visibility = android.view.View.VISIBLE
         cardDayProgress.visibility = android.view.View.VISIBLE

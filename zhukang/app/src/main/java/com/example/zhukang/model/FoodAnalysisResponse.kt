@@ -19,7 +19,10 @@ data class FoodAnalysisResponse(
     val fat: Float,
 
     @SerializedName("carbs")
-    val carbs: Float
+    val carbs: Float,
+
+    @SerializedName("image_url")
+    val imageUrl: String? = null
 ) {
     override fun toString(): String {
         return """
