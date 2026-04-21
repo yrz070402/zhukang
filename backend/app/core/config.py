@@ -2,7 +2,12 @@
 应用配置 - 从环境变量读取配置信息
 """
 from functools import lru_cache
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+
+BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
@@ -25,6 +30,11 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "change-this-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+
+    # 静态资源根目录（相对 backend/），对应 FastAPI 的 /static 路由挂载。
+    static_root: str = str(BACKEND_ROOT / "storage")
+    # 食物缩略图子目录，Bitelog 网格展示来源。
+    food_image_subdir: str = "food_images"
 
     class Config:
         env_file = ".env"

@@ -1,5 +1,6 @@
 package com.example.zhukang.api
 
+import com.example.zhukang.model.DietMapResponse
 import com.example.zhukang.model.LoginRequest
 import com.example.zhukang.model.LoginResponse
 import com.example.zhukang.model.PopularTagsResponse
@@ -104,8 +105,15 @@ interface AuthApiService {
         @Query("user_id") userId: String
     ): Response<UserReportResponse>
 
+    @GET("api/v1/report/diet-map")
+    suspend fun getDietMap(
+        @Query("user_id") userId: String,
+        @Query("period") period: String,
+        @Query("offset") offset: Int = 0
+    ): Response<DietMapResponse>
+
     companion object {
-        private const val BASE_URL = "http://10.0.2.2:8000/"
+        private val BASE_URL: String = BackendUrls.BASE_URL
 
         fun create(): AuthApiService {
             val okHttpClient = OkHttpClient.Builder()

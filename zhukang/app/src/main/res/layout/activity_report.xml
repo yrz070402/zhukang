@@ -80,9 +80,19 @@
                 android:layout_weight="1"
                 android:minHeight="44dp"
                 android:text="月报" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPeriodBitelog"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="44dp"
+                android:text="Bitelog" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <HorizontalScrollView
+            android:id="@+id/metricScrollContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -126,6 +136,7 @@
         </HorizontalScrollView>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardChart"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -165,6 +176,7 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardLatestSummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -196,6 +208,8 @@
                     android:textSize="13sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <include layout="@layout/layout_bitelog" />
 
         <TextView
             android:id="@+id/tvReportState"

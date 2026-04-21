@@ -213,6 +213,8 @@ class NutritionIntake(Base, TimestampMixin):
     fiber_g: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
     sodium_mg: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
 
+    # 抠图后存储的缩略图相对路径，用于 Bitelog 网格展示。
+    image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     remark: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="nutrition_intakes")
