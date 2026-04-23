@@ -44,6 +44,55 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
+        <!-- 餐次选择区 -->
+        <LinearLayout
+            android:id="@+id/mealTypeSelector"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+
+            <Button
+                android:id="@+id/btnBreakfast"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="早餐"
+                android:textSize="14sp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:backgroundTint="@android:color/transparent"
+                android:textColor="@color/zk_text_primary" />
+
+            <Button
+                android:id="@+id/btnLunch"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="午餐"
+                android:textSize="14sp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:backgroundTint="@android:color/transparent"
+                android:textColor="@color/zk_text_primary" />
+
+            <Button
+                android:id="@+id/btnDinner"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="晚餐"
+                android:textSize="14sp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:backgroundTint="@android:color/transparent"
+                android:textColor="@color/zk_text_primary" />
+
+        </LinearLayout>
+
         <!-- 拍照按钮 -->
         <Button
             android:id="@+id/btnTakePhoto"
@@ -53,12 +102,12 @@
             android:textSize="18sp"
             android:drawableStart="@android:drawable/ic_menu_camera"
             android:drawablePadding="8dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="12dp"
             android:backgroundTint="@color/zk_primary"
             android:textColor="@color/zk_on_primary"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
+            app:layout_constraintTop_toBottomOf="@id/mealTypeSelector" />
 
         <!-- 测试按钮（使用本地测试图片） -->
         <Button
@@ -75,6 +124,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnTakePhoto" />
 
+        <!-- 智能推荐按钮 -->
+        <Button
+            android:id="@+id/btnRecommend"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:text="智能推荐"
+            android:textSize="14sp"
+            android:textColor="@color/zk_on_primary"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/zk_primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnTestImage" />
+
         <!-- 图片预览区域 -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardImage"
@@ -85,7 +148,7 @@
             app:cardElevation="4dp"
             app:cardBackgroundColor="@color/zk_surface"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/btnTestImage">
+            app:layout_constraintTop_toBottomOf="@id/btnRecommend">
 
             <ImageView
                 android:id="@+id/ivFoodImage"

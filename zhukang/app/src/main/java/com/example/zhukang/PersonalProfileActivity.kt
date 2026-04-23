@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.RadioGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +33,7 @@ class PersonalProfileActivity : AppCompatActivity() {
 
     private val authApiService by lazy { AuthApiService.create() }
 
+    private lateinit var btnBack: ImageButton
     private lateinit var ivAvatar: ImageView
     private lateinit var tvAccount: TextView
     private lateinit var tvNicknameValue: TextView
@@ -91,6 +93,7 @@ class PersonalProfileActivity : AppCompatActivity() {
     }
 
     private fun bindViews() {
+        btnBack = findViewById(R.id.btnBack)
         ivAvatar = findViewById(R.id.ivAvatar)
         tvAccount = findViewById(R.id.tvAccount)
         tvNicknameValue = findViewById(R.id.tvNicknameValue)
@@ -126,6 +129,7 @@ class PersonalProfileActivity : AppCompatActivity() {
     }
 
     private fun bindEvents() {
+        btnBack.setOnClickListener { finish() }
         btnChangeAvatar.setOnClickListener { showAvatarPicker() }
         btnAddTag.setOnClickListener { addTagFromInput() }
         btnSaveProfile.setOnClickListener { saveProfile() }

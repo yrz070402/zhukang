@@ -15,6 +15,8 @@ import com.example.zhukang.model.UserDailyIntakeSummaryResponse
 import com.example.zhukang.model.UserDailyGoalTargetsResponse
 import com.example.zhukang.model.UserTagsUpdateRequest
 import com.example.zhukang.model.UserTagsUpdateResponse
+import com.example.zhukang.model.RecommendRequest
+import com.example.zhukang.model.RecommendResponse
 import okhttp3.OkHttpClient
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -112,15 +114,27 @@ interface AuthApiService {
         @Query("offset") offset: Int = 0
     ): Response<DietMapResponse>
 
+    // 饮食推荐
+    @POST("api/v1/recommend/next-meal")
+    suspend fun getRecommendation(
+        @Body request: RecommendRequest
+    ): Response<RecommendResponse>
+
+    // 饮食推荐 Mock 接口（用于展示测试）
+    @POST("api/v1/recommend/next-meal/mock")
+    suspend fun getRecommendationMock(
+        @Body request: RecommendRequest
+    ): Response<RecommendResponse>
+
     companion object {
         private val BASE_URL: String = BackendUrls.BASE_URL
 
         fun create(): AuthApiService {
             val okHttpClient = OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .callTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)      // LLM 调用需要更长时间
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .callTimeout(180, TimeUnit.SECONDS)      // 整体超时 3 分钟
                 .build()
 
             val retrofit = Retrofit.Builder()
