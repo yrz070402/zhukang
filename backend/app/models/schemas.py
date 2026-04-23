@@ -231,3 +231,52 @@ class DietMapResponse(BaseModel):
     start_at: str
     end_at: str
     days: list[DietMapDay]
+
+
+# ==================== 饮食推荐相关模型 ====================
+
+class NextMealTarget(BaseModel):
+    """下一餐目标"""
+    target_calories: str
+    focus_macros: str
+
+
+class RecommendedDish(BaseModel):
+    """推荐菜品"""
+    dish_name: str
+    reason: str
+    estimated_calories: str
+    cooking_steps: str = ""
+
+
+class RecommendRequest(BaseModel):
+    """饮食推荐请求"""
+    userId: str
+    selectedFoods: list[str] = Field(default_factory=list)
+    manualInput: Optional[str] = None
+    mealType: str  # BREAKFAST, LUNCH, DINNER
+
+
+class RecommendResponse(BaseModel):
+    """饮食推荐响应"""
+    analysis: str
+    next_meal_target: NextMealTarget
+    recommendations: list[RecommendedDish]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "analysis": "上一餐碳水偏高，蛋白质摄入不足。",
+                "next_meal_target": {
+                    "target_calories": "400-500 kcal",
+                    "focus_macros": "蛋白质、膳食纤维"
+                },
+                "recommendations": [
+                    {
+                        "dish_name": "清蒸鲈鱼配西兰花",
+                        "reason": "鲈鱼富含优质蛋白，清蒸保留营养；西兰花补充膳食纤维",
+                        "estimated_calories": "约 380 kcal"
+                    }
+                ]
+            }
+        }

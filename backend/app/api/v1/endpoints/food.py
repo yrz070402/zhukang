@@ -94,14 +94,16 @@ async def _insert_nutrition_intake(
     user_id: UUID,
     result: FoodAnalysisResponse,
     image_url: str | None = None,
+    meal_type: MealType | None = None,  # 前端传入的餐次，优先使用
 ) -> None:
     intake_time = datetime.now(ZoneInfo(settings.timezone))
-    meal_type = _resolve_meal_type(intake_time)
+    # 如果前端传了餐次，使用前端的值；否则根据时间自动判断
+    resolved_meal_type = meal_type if meal_type else _resolve_meal_type(intake_time)
 
     intake = NutritionIntake(
         user_id=user_id,
         intake_time=intake_time,
-        meal_type=meal_type,
+        meal_type=resolved_meal_type,
         food_name=result.food_name,
         energy_kcal=Decimal(str(result.calories)),
         fat_g=Decimal(str(result.fat or 0)),
@@ -119,16 +121,26 @@ async def _insert_nutrition_intake(
 async def analyze_food(
     image: UploadFile = File(...),
     user_id: UUID = Form(...),
+    meal_type: str | None = Form(None),  # 前端传入的餐次（可选）
     db: AsyncSession = Depends(get_db),
 ):
     """
     分析食物图片
 
     - **image**: 食物图片文件（支持 jpg, png, webp 等格式）
+    - **meal_type**: 餐次类型（可选）：BREAKFAST, LUNCH, DINNER, SNACK
 
     使用豆包大模型 Vision API 识别食物并分析营养成分
     """
     await _ensure_user_exists(db, user_id)
+
+    # 解析前端传入的餐次
+    resolved_meal_type: MealType | None = None
+    if meal_type:
+        try:
+            resolved_meal_type = MealType[meal_type.upper()]
+        except KeyError:
+            logger.warning(f"无效的 meal_type: {meal_type}，将使用时间自动判断")
 
     # 读取图片内容
     contents = await image.read()
@@ -163,7 +175,7 @@ async def analyze_food(
         except Exception as thumb_err:
             logger.warning(f"Bitelog 缩略图落盘失败，忽略: {thumb_err}")
 
-        await _insert_nutrition_intake(db, user_id, result, image_url=image_url)
+        await _insert_nutrition_intake(db, user_id, result, image_url=image_url, meal_type=resolved_meal_type)
 
         print(f"[RESULT] 分析结果: {result.model_dump()}")
         return result
@@ -180,12 +192,21 @@ async def analyze_food(
 async def analyze_food_mock(
     image: UploadFile = File(...),
     user_id: UUID = Form(...),
+    meal_type: str | None = Form(None),  # 前端传入的餐次（可选）
     db: AsyncSession = Depends(get_db),
 ):
     """
     调试接口：与 analyze_food 相同的图片处理流程，但不调用豆包 API，直接返回模拟结果
     """
     await _ensure_user_exists(db, user_id)
+
+    # 解析前端传入的餐次
+    resolved_meal_type: MealType | None = None
+    if meal_type:
+        try:
+            resolved_meal_type = MealType[meal_type.upper()]
+        except KeyError:
+            logger.warning(f"[MOCK] 无效的 meal_type: {meal_type}，将使用时间自动判断")
 
     contents = await image.read()
 
@@ -202,12 +223,13 @@ async def analyze_food_mock(
         )
 
         # 返回模拟豆包识别结果，便于前后端联调
+        # 数据来源：豆包 Vision API 真实识别 test_food.jpg
         result = FoodAnalysisResponse(
-            food_name="调试样例-鸡胸肉沙拉",
-            calories=1220.0,
-            protein=82.0,
-            fat=15.0,
-            carbs=280.0
+            food_name="豆包识别-综合餐食",
+            calories=1260.0,
+            protein=84.0,
+            fat=72.0,
+            carbs=27.0
         )
 
         image_url: str | None = None
@@ -217,7 +239,7 @@ async def analyze_food_mock(
         except Exception as thumb_err:
             logger.warning(f"[MOCK] Bitelog 缩略图落盘失败，忽略: {thumb_err}")
 
-        await _insert_nutrition_intake(db, user_id, result, image_url=image_url)
+        await _insert_nutrition_intake(db, user_id, result, image_url=image_url, meal_type=resolved_meal_type)
         return result
 
     except HTTPException:

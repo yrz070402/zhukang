@@ -55,9 +55,17 @@ class MainActivity : AppCompatActivity() {
         IDEAL
     }
 
+    private enum class MealType {
+        BREAKFAST, LUNCH, DINNER
+    }
+
     // Views
+    private lateinit var btnBreakfast: Button
+    private lateinit var btnLunch: Button
+    private lateinit var btnDinner: Button
     private lateinit var btnTakePhoto: Button
     private lateinit var btnTestImage: Button
+    private lateinit var btnRecommend: Button
     private lateinit var ivFoodImage: ImageView
     private lateinit var cardImage: CardView
     private lateinit var cardResult: CardView
@@ -106,6 +114,22 @@ class MainActivity : AppCompatActivity() {
     private var currentFat = 0f
     private var currentCarbs = 0f
     private var currentUserId: String? = null
+
+    // 当前选中的餐次（初始为 null，用户必须手动选择）
+    private var selectedMealType: MealType? = null
+
+    // 当前餐次的目标值（每日目标 × 餐次比例）
+    private var mealGoalCalories = 0f
+    private var mealGoalProtein = 0f
+    private var mealGoalFat = 0f
+    private var mealGoalCarbs = 0f
+
+    // 餐次目标比例
+    private val mealRatios = mapOf(
+        MealType.BREAKFAST to 0.30f,
+        MealType.LUNCH to 0.40f,
+        MealType.DINNER to 0.30f
+    )
 
     companion object {
         private const val TAG = "MainActivity"
@@ -180,14 +204,24 @@ class MainActivity : AppCompatActivity() {
             openPersonalProfileScreen()
         }
 
+        // 餐次选择按钮点击事件
+        btnBreakfast.setOnClickListener { selectMealType(MealType.BREAKFAST) }
+        btnLunch.setOnClickListener { selectMealType(MealType.LUNCH) }
+        btnDinner.setOnClickListener { selectMealType(MealType.DINNER) }
+
+        // 智能推荐按钮
+        btnRecommend.setOnClickListener { openRecommendScreen() }
+
         loadUserGoalTargets()
-        loadUserDailyIntakeSummary()
+        // 移除：不在页面加载时显示进度条，只在分析食物后显示
+        // loadUserDailyIntakeSummary()
     }
 
     private fun loadUserGoalTargets() {
         val userId = currentUserId
         if (userId.isNullOrBlank()) {
             Toast.makeText(this, "未检测到用户信息，使用默认目标", Toast.LENGTH_SHORT).show()
+            updateMealGoals()
             return
         }
 
@@ -198,6 +232,7 @@ class MainActivity : AppCompatActivity() {
 
             if (response?.isSuccessful != true || response.body() == null) {
                 Toast.makeText(this@MainActivity, "加载目标进度失败，使用默认目标", Toast.LENGTH_SHORT).show()
+                updateMealGoals()
                 return@launch
             }
 
@@ -207,6 +242,7 @@ class MainActivity : AppCompatActivity() {
             dailyGoalFat = body.targetFatG.coerceAtLeast(0f)
             dailyGoalCarbs = body.targetCarbG.coerceAtLeast(0f)
 
+            updateMealGoals()
             renderProgressValues()
         }
     }
@@ -238,8 +274,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        // 餐次选择按钮
+        btnBreakfast = findViewById(R.id.btnBreakfast)
+        btnLunch = findViewById(R.id.btnLunch)
+        btnDinner = findViewById(R.id.btnDinner)
+
         btnTakePhoto = findViewById(R.id.btnTakePhoto)
         btnTestImage = findViewById(R.id.btnTestImage)
+        btnRecommend = findViewById(R.id.btnRecommend)
         ivFoodImage = findViewById(R.id.ivFoodImage)
         cardImage = findViewById(R.id.cardImage)
         cardResult = findViewById(R.id.cardResult)
@@ -269,9 +311,72 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * 选择餐次并更新按钮状态
+     */
+    private fun selectMealType(type: MealType) {
+        selectedMealType = type
+        updateMealTypeButtonStyles()
+        updateMealGoals()
+    }
+
+    /**
+     * 更新当餐目标（每日目标 × 餐次比例）
+     */
+    private fun updateMealGoals() {
+        val ratio = mealRatios[selectedMealType] ?: 0.40f
+        mealGoalCalories = dailyGoalCalories * ratio
+        mealGoalProtein = dailyGoalProtein * ratio
+        mealGoalFat = dailyGoalFat * ratio
+        mealGoalCarbs = dailyGoalCarbs * ratio
+    }
+
+    /**
+     * 更新餐次按钮样式（选中态高亮）
+     */
+    private fun updateMealTypeButtonStyles() {
+        val selectedColor = ContextCompat.getColor(this, R.color.zk_primary)
+        val unselectedColor = ContextCompat.getColor(this, R.color.zk_text_secondary)
+        val selectedBg = ContextCompat.getColor(this, R.color.zk_primary)
+
+        btnBreakfast.apply {
+            if (selectedMealType == MealType.BREAKFAST) {
+                setBackgroundColor(selectedBg)
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.zk_on_primary))
+            } else {
+                setBackgroundColor(ContextCompat.getColor(this@MainActivity, android.R.color.transparent))
+                setTextColor(unselectedColor)
+            }
+        }
+
+        btnLunch.apply {
+            if (selectedMealType == MealType.LUNCH) {
+                setBackgroundColor(selectedBg)
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.zk_on_primary))
+            } else {
+                setBackgroundColor(ContextCompat.getColor(this@MainActivity, android.R.color.transparent))
+                setTextColor(unselectedColor)
+            }
+        }
+
+        btnDinner.apply {
+            if (selectedMealType == MealType.DINNER) {
+                setBackgroundColor(selectedBg)
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.zk_on_primary))
+            } else {
+                setBackgroundColor(ContextCompat.getColor(this@MainActivity, android.R.color.transparent))
+                setTextColor(unselectedColor)
+            }
+        }
+    }
+
+    /**
      * 检查相机权限并打开相机
      */
     private fun checkCameraPermissionAndOpen() {
+        if (selectedMealType == null) {
+            Toast.makeText(this, "请先选择餐次", Toast.LENGTH_SHORT).show()
+            return
+        }
         if (ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION)
             == PackageManager.PERMISSION_GRANTED) {
             openCamera()
@@ -352,6 +457,10 @@ class MainActivity : AppCompatActivity() {
      * 分析测试图片
      */
     private fun analyzeTestImage() {
+        if (selectedMealType == null) {
+            Toast.makeText(this, "请先选择餐次", Toast.LENGTH_SHORT).show()
+            return
+        }
         showLoading()
 
         lifecycleScope.launch {
@@ -396,11 +505,12 @@ class MainActivity : AppCompatActivity() {
                     requestFile
                 )
                 val userIdPart = userId.toRequestBody("text/plain".toMediaTypeOrNull())
+                val mealTypePart = selectedMealType?.name?.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                Log.d(TAG, "上传图片: $fileName, 大小: ${imageBytes.size} bytes")
+                Log.d(TAG, "上传图片: $fileName, 大小: ${imageBytes.size} bytes, 餐次: ${selectedMealType?.name}")
 
                 // 调用 API
-                val response = foodApiService.analyzeFood(imagePart, userIdPart)
+                val response = foodApiService.analyzeFood(imagePart, userIdPart, mealTypePart)
 
                 hideLoading()
 
@@ -448,6 +558,12 @@ class MainActivity : AppCompatActivity() {
         tvFat.text = response.fat.toInt().toString()
         tvCarbs.text = response.carbs.toInt().toString()
 
+        // 更新当前摄入量为这一餐的数据（用于进度条显示）
+        currentCalories = response.calories
+        currentProtein = response.protein
+        currentFat = response.fat ?: 0f
+        currentCarbs = response.carbs ?: 0f
+
         // 若后端返回了抠图后的缩略图 URL，则替换当前预览图，呈现 Bitelog 同款效果。
         response.imageUrl?.takeIf { it.isNotBlank() }?.let { imageUrl ->
             ivFoodImage.load(BackendUrls.absolutize(imageUrl))
@@ -456,14 +572,17 @@ class MainActivity : AppCompatActivity() {
         cardResult.visibility = android.view.View.VISIBLE
         cardDayProgress.visibility = android.view.View.VISIBLE
         tvError.visibility = android.view.View.GONE
-        loadUserDailyIntakeSummary()
+
+        // 更新进度条显示（使用当餐目标）
+        renderProgressValues()
     }
 
     private fun renderProgressValues(animate: Boolean = false) {
-        val caloriesPercent = toPercent(currentCalories, dailyGoalCalories)
-        val proteinPercent = toPercent(currentProtein, dailyGoalProtein)
-        val fatPercent = toPercent(currentFat, dailyGoalFat)
-        val carbsPercent = toPercent(currentCarbs, dailyGoalCarbs)
+        // 使用当餐目标计算百分比
+        val caloriesPercent = toPercent(currentCalories, mealGoalCalories)
+        val proteinPercent = toPercent(currentProtein, mealGoalProtein)
+        val fatPercent = toPercent(currentFat, mealGoalFat)
+        val carbsPercent = toPercent(currentCarbs, mealGoalCarbs)
 
         applyProgressVisual(pbDayCalories, caloriesPercent)
         applyProgressVisual(pbDayProtein, proteinPercent)
@@ -506,17 +625,17 @@ class MainActivity : AppCompatActivity() {
     ) {
 
         if (progressDisplayMode == ProgressDisplayMode.PERCENTAGE) {
-            tvProgressModeHint.text = "百分比（点按切换）"
+            tvProgressModeHint.text = "当餐百分比（点按切换）"
             tvDayCaloriesValue.text = "$caloriesPercent%"
             tvDayProteinValue.text = "$proteinPercent%"
             tvDayFatValue.text = "$fatPercent%"
             tvDayCarbsValue.text = "$carbsPercent%"
         } else {
-            tvProgressModeHint.text = "绝对值（点按切换）"
-            tvDayCaloriesValue.text = "${currentCalories.roundToInt()}kcal / ${dailyGoalCalories.roundToInt()}kcal"
-            tvDayProteinValue.text = "${currentProtein.roundToInt()}g / ${dailyGoalProtein.roundToInt()}g"
-            tvDayFatValue.text = "${currentFat.roundToInt()}g / ${dailyGoalFat.roundToInt()}g"
-            tvDayCarbsValue.text = "${currentCarbs.roundToInt()}g / ${dailyGoalCarbs.roundToInt()}g"
+            tvProgressModeHint.text = "当餐绝对值（点按切换）"
+            tvDayCaloriesValue.text = "${currentCalories.roundToInt()}kcal / ${mealGoalCalories.roundToInt()}kcal"
+            tvDayProteinValue.text = "${currentProtein.roundToInt()}g / ${mealGoalProtein.roundToInt()}g"
+            tvDayFatValue.text = "${currentFat.roundToInt()}g / ${mealGoalFat.roundToInt()}g"
+            tvDayCarbsValue.text = "${currentCarbs.roundToInt()}g / ${mealGoalCarbs.roundToInt()}g"
         }
     }
 
@@ -585,6 +704,23 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, PersonalProfileActivity::class.java)
         intent.putExtra("user_id", userId)
         startActivity(intent)
+    }
+
+    // 智能推荐入口
+    private fun openRecommendScreen() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            Toast.makeText(this, "缺少用户信息，请重新登录", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val mealType = selectedMealType?.name
+        if (mealType.isNullOrBlank()) {
+            Toast.makeText(this, "请先选择餐次", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        RecommendActivity.start(this, userId, mealType)
     }
 
     /**

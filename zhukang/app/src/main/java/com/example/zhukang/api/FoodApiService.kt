@@ -24,13 +24,14 @@ interface FoodApiService {
     @POST("api/v1/food/analyze/mock")
     suspend fun analyzeFood(
         @Part image: MultipartBody.Part,
-        @Part("user_id") userId: RequestBody
+        @Part("user_id") userId: RequestBody,
+        @Part("meal_type") mealType: RequestBody? = null
     ): Response<FoodAnalysisResponse>
 
     companion object {
         // 模拟器访问本地主机使用 10.0.2.2
         // 真机访问改为电脑实际 IP，如 http://192.168.0.226:8000/
-        private const val BASE_URL = "http://10.0.2.2:8000/"
+        private const val BASE_URL = "http://10.0.2.2:8001/"
 
         fun create(): FoodApiService {
             // 配置 OkHttp 客户端，增加超时时间

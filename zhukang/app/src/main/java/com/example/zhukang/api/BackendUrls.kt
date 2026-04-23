@@ -6,7 +6,7 @@ package com.example.zhukang.api
  * - 把后端返回的相对路径（如 /static/...）拼接成可访问的绝对地址。
  */
 object BackendUrls {
-    const val BASE_URL: String = "http://10.0.2.2:8000/"
+    const val BASE_URL: String = "http://10.0.2.2:8001/"
 
     fun absolutize(relativeOrAbsolute: String): String {
         if (relativeOrAbsolute.startsWith("http://", ignoreCase = true) ||

@@ -176,3 +176,30 @@ data class DietMapResponse(
     @SerializedName("end_at") val endAt: String,
     @SerializedName("days") val days: List<DietMapDay>
 )
+
+// ==================== 饮食推荐相关模型 ====================
+
+data class RecommendRequest(
+    @SerializedName("userId") val userId: String,
+    @SerializedName("selectedFoods") val selectedFoods: List<String>,
+    @SerializedName("manualInput") val manualInput: String?,
+    @SerializedName("mealType") val mealType: String
+)
+
+data class NextMealTarget(
+    @SerializedName("target_calories") val targetCalories: String,
+    @SerializedName("focus_macros") val focusMacros: String
+)
+
+data class RecommendedDish(
+    @SerializedName("dish_name") val dishName: String,
+    @SerializedName("reason") val reason: String,
+    @SerializedName("estimated_calories") val estimatedCalories: String,
+    @SerializedName("cooking_steps") val cookingSteps: String
+)
+
+data class RecommendResponse(
+    @SerializedName("analysis") val analysis: String,
+    @SerializedName("next_meal_target") val nextMealTarget: NextMealTarget,
+    @SerializedName("recommendations") val recommendations: List<RecommendedDish>
+)
