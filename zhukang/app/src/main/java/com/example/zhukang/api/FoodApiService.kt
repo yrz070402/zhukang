@@ -18,10 +18,7 @@ import java.util.concurrent.TimeUnit
 interface FoodApiService {
 
     @Multipart
-    // 运行模式
-    // @POST("api/v1/food/analyze")
-    // 调试模式
-    @POST("api/v1/food/analyze/mock")
+    @POST("api/v1/food/analyze")
     suspend fun analyzeFood(
         @Part image: MultipartBody.Part,
         @Part("user_id") userId: RequestBody,
@@ -29,10 +26,6 @@ interface FoodApiService {
     ): Response<FoodAnalysisResponse>
 
     companion object {
-        // 模拟器访问本地主机使用 10.0.2.2
-        // 真机访问改为电脑实际 IP，如 http://192.168.0.226:8000/
-        private const val BASE_URL = "http://10.0.2.2:8001/"
-
         fun create(): FoodApiService {
             // 配置 OkHttp 客户端，增加超时时间
             val okHttpClient = OkHttpClient.Builder()
@@ -43,7 +36,7 @@ interface FoodApiService {
                 .build()
 
             val retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(BackendUrls.BASE_URL)
                 .client(okHttpClient)  // 使用自定义的 OkHttp 客户端
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()

@@ -1,40 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/zk_bg">
 
-    <!-- 顶部工具栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:layout_height="60dp"
         android:background="@color/zk_surface"
-        android:elevation="4dp">
+        android:elevation="3dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:padding="12dp"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="返回"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            android:padding="10dp"
+            android:src="@android:drawable/ic_media_previous"
+            android:tint="@color/zk_text_primary" />
 
         <TextView
+            android:id="@+id/tvPageTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:text="智能推荐"
-            android:textSize="20sp"
-            android:textStyle="bold"
             android:textColor="@color/zk_text_primary"
-            android:layout_marginStart="8dp" />
-
+            android:textSize="20sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <ScrollView
@@ -48,127 +53,183 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp"
-            android:paddingBottom="32dp"
+            android:paddingBottom="188dp"
             tools:context=".RecommendActivity">
 
-            <!-- 副标题 -->
-            <TextView
-                android:id="@+id/tvSubtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="选择您想吃/已吃的食物"
-                android:textSize="14sp"
-                android:textColor="@color/zk_text_secondary"
-                android:layout_gravity="center_horizontal" />
-
-            <!-- 食物选择区域 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="常见食物"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/zk_text_primary"
-                android:layout_marginTop="20dp" />
-
-            <GridLayout
-                android:id="@+id/foodGrid"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="4"
-                android:rowCount="4"
-                android:layout_marginTop="12dp"
-                android:useDefaultMargins="true" />
-
-            <!-- 手动输入区域 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="其他食物（可选）"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/zk_text_primary"
-                android:layout_marginTop="20dp" />
-
-            <EditText
-                android:id="@+id/etManualInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="输入其他食物名称，多个用逗号分隔"
-                android:textSize="14sp"
-                android:padding="12dp"
-                android:background="@drawable/bg_edittext"
-                android:inputType="text" />
-
-            <!-- 获取推荐按钮 -->
-            <Button
-                android:id="@+id/btnGetRecommendation"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="24dp"
-                android:text="获取推荐"
-                android:textSize="18sp"
-                android:backgroundTint="@color/zk_primary"
-                android:textColor="@color/zk_on_primary" />
-
-            <!-- Mock推荐按钮（用于展示测试） -->
-            <Button
-                android:id="@+id/btnGetMockRecommendation"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:text="Mock 推荐（测试用）"
-                android:textSize="14sp"
-                android:backgroundTint="@color/zk_secondary"
-                android:textColor="@color/zk_text_primary" />
-
-            <!-- 加载进度条 -->
-            <ProgressBar
-                android:id="@+id/progressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="24dp"
-                android:visibility="gone" />
-
-            <!-- 推荐结果卡片 -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardResult"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="6dp"
                 app:cardBackgroundColor="@color/zk_surface"
-                android:visibility="gone">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/zk_divider"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="16dp">
 
-                    <!-- 推荐菜品标题 -->
                     <TextView
+                        android:id="@+id/tvSubtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="推荐菜品"
+                        android:text="按食材生成下一餐建议"
+                        android:textColor="@color/zk_text_primary"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/zk_text_primary" />
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSelectionSummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="已选食材：未选择"
+                        android:textColor="@color/zk_text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/tvFoodSectionTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="常见食物"
+                android:textColor="@color/zk_text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <GridLayout
+                android:id="@+id/foodGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:columnCount="4"
+                android:rowCount="4"
+                android:useDefaultMargins="true" />
+
+            <TextView
+                android:id="@+id/tvManualSectionTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="其他食物（可选）"
+                android:textColor="@color/zk_text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etManualInput"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_edittext"
+                android:hint="输入其他食材，多个用逗号分隔"
+                android:inputType="text"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="@color/zk_text_primary"
+                android:textColorHint="@color/zk_text_secondary"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btnClearSelection"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/zk_secondary"
+                android:text="清空已选食材"
+                android:textColor="@color/zk_text_primary"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnGetRecommendation"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/zk_primary"
+                android:text="获取推荐"
+                android:textColor="@color/zk_on_primary"
+                android:textSize="16sp" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:visibility="gone" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/zk_surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvResultTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="推荐分析"
+                        android:textColor="@color/zk_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAnalysis"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/zk_text_secondary"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvTarget"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/zk_text_primary"
+                        android:textSize="13sp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@color/zk_divider" />
+
+                    <TextView
+                        android:id="@+id/tvMealsTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="推荐菜品"
+                        android:textColor="@color/zk_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:id="@+id/layoutMeals"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="8dp"
                         android:orientation="vertical" />
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-
         </LinearLayout>
     </ScrollView>
+    </LinearLayout>
 
-</LinearLayout>
+    <include layout="@layout/layout_bottom_nav" />
+</FrameLayout>

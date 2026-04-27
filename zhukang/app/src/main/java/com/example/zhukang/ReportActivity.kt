@@ -1,5 +1,6 @@
 package com.example.zhukang
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -41,6 +42,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class ReportActivity : AppCompatActivity() {
@@ -48,15 +50,31 @@ class ReportActivity : AppCompatActivity() {
     private enum class Period { DAILY, WEEKLY, MONTHLY, BITELOG }
     private enum class Metric { CALORIES, PROTEIN, FAT, CARB }
     private enum class BitelogPeriod { WEEKLY, MONTHLY }
+    private enum class BottomTab { HOME, RECOMMEND, REPORT, PROFILE }
 
     private val authApiService by lazy { AuthApiService.create() }
 
     private lateinit var btnBack: ImageButton
+    private lateinit var tvPageTitle: TextView
+    private lateinit var tvPageSubtitle: TextView
+    private lateinit var navHome: LinearLayout
+    private lateinit var navRecommend: LinearLayout
+    private lateinit var navReport: LinearLayout
+    private lateinit var navProfile: LinearLayout
+    private lateinit var navHomeIcon: ImageView
+    private lateinit var navRecommendIcon: ImageView
+    private lateinit var navReportIcon: ImageView
+    private lateinit var navProfileIcon: ImageView
+    private lateinit var navHomeLabel: TextView
+    private lateinit var navRecommendLabel: TextView
+    private lateinit var navReportLabel: TextView
+    private lateinit var navProfileLabel: TextView
     private lateinit var togglePeriod: MaterialButtonToggleGroup
     private lateinit var metricScrollContainer: HorizontalScrollView
     private lateinit var chipGroupMetric: ChipGroup
     private lateinit var cardChart: CardView
     private lateinit var cardLatestSummary: CardView
+    private lateinit var tvLatestSummaryTitle: TextView
     private lateinit var lineChart: LineChart
     private lateinit var tvRange: TextView
     private lateinit var tvGoalHint: TextView
@@ -70,6 +88,13 @@ class ReportActivity : AppCompatActivity() {
     private lateinit var btnBitelogNext: ImageButton
     private lateinit var bitelogGrid: GridLayout
     private lateinit var bitelogWeekdayHeader: LinearLayout
+    private lateinit var tvWeekdayMon: TextView
+    private lateinit var tvWeekdayTue: TextView
+    private lateinit var tvWeekdayWed: TextView
+    private lateinit var tvWeekdayThu: TextView
+    private lateinit var tvWeekdayFri: TextView
+    private lateinit var tvWeekdaySat: TextView
+    private lateinit var tvWeekdaySun: TextView
     private lateinit var tvBitelogEmpty: TextView
 
     private var currentUserId: String? = null
@@ -78,6 +103,7 @@ class ReportActivity : AppCompatActivity() {
     private var currentReport: UserReportResponse? = null
     private var bitelogSubPeriod = BitelogPeriod.WEEKLY
     private var bitelogOffset = 0
+    private var isEnglishUi = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,12 +111,14 @@ class ReportActivity : AppCompatActivity() {
         setContentView(R.layout.activity_report)
 
         currentUserId = intent.getStringExtra("user_id")
+        isEnglishUi = SessionPrefs.isEnglishEnabled(this)
         initViews()
+        applyLanguageTexts()
         initChart()
         bindEvents()
 
         if (currentUserId.isNullOrBlank()) {
-            showState("缺少用户信息，请返回首页重试", true)
+            showState(t("缺少用户信息，请返回首页重试", "Missing user info. Please return to Home and try again."), true)
             return
         }
 
@@ -99,13 +127,42 @@ class ReportActivity : AppCompatActivity() {
         loadReport(currentPeriod)
     }
 
+    override fun onResume() {
+        super.onResume()
+        val latestEnglish = SessionPrefs.isEnglishEnabled(this)
+        if (latestEnglish != isEnglishUi) {
+            isEnglishUi = latestEnglish
+            applyLanguageTexts()
+            if (currentPeriod == Period.BITELOG) {
+                loadBitelog()
+            } else {
+                renderChart(currentReport)
+            }
+        }
+    }
+
     private fun initViews() {
         btnBack = findViewById(R.id.btnBack)
+        tvPageTitle = findViewById(R.id.tvPageTitle)
+        tvPageSubtitle = findViewById(R.id.tvPageSubtitle)
+        navHome = findViewById(R.id.navHome)
+        navRecommend = findViewById(R.id.navRecommend)
+        navReport = findViewById(R.id.navReport)
+        navProfile = findViewById(R.id.navProfile)
+        navHomeIcon = findViewById(R.id.navHomeIcon)
+        navRecommendIcon = findViewById(R.id.navRecommendIcon)
+        navReportIcon = findViewById(R.id.navReportIcon)
+        navProfileIcon = findViewById(R.id.navProfileIcon)
+        navHomeLabel = findViewById(R.id.navHomeLabel)
+        navRecommendLabel = findViewById(R.id.navRecommendLabel)
+        navReportLabel = findViewById(R.id.navReportLabel)
+        navProfileLabel = findViewById(R.id.navProfileLabel)
         togglePeriod = findViewById(R.id.togglePeriod)
         metricScrollContainer = findViewById(R.id.metricScrollContainer)
         chipGroupMetric = findViewById(R.id.chipGroupMetric)
         cardChart = findViewById(R.id.cardChart)
         cardLatestSummary = findViewById(R.id.cardLatestSummary)
+        tvLatestSummaryTitle = findViewById(R.id.tvLatestSummaryTitle)
         lineChart = findViewById(R.id.lineChart)
         tvRange = findViewById(R.id.tvRange)
         tvGoalHint = findViewById(R.id.tvGoalHint)
@@ -119,11 +176,18 @@ class ReportActivity : AppCompatActivity() {
         btnBitelogNext = findViewById(R.id.btnBitelogNext)
         bitelogGrid = findViewById(R.id.bitelogGrid)
         bitelogWeekdayHeader = findViewById(R.id.bitelogWeekdayHeader)
+        tvWeekdayMon = findViewById(R.id.tvWeekdayMon)
+        tvWeekdayTue = findViewById(R.id.tvWeekdayTue)
+        tvWeekdayWed = findViewById(R.id.tvWeekdayWed)
+        tvWeekdayThu = findViewById(R.id.tvWeekdayThu)
+        tvWeekdayFri = findViewById(R.id.tvWeekdayFri)
+        tvWeekdaySat = findViewById(R.id.tvWeekdaySat)
+        tvWeekdaySun = findViewById(R.id.tvWeekdaySun)
         tvBitelogEmpty = findViewById(R.id.tvBitelogEmpty)
     }
 
     private fun initChart() {
-        lineChart.setNoDataText("暂无可展示数据")
+        lineChart.setNoDataText(t("暂无可展示数据", "No data to display"))
         lineChart.description.isEnabled = false
         lineChart.setTouchEnabled(true)
         lineChart.setPinchZoom(false)
@@ -146,6 +210,8 @@ class ReportActivity : AppCompatActivity() {
 
     private fun bindEvents() {
         btnBack.setOnClickListener { finish() }
+        setupBottomNav()
+        setBottomNavSelection(BottomTab.REPORT)
 
         togglePeriod.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
@@ -182,12 +248,94 @@ class ReportActivity : AppCompatActivity() {
         }
         btnBitelogNext.setOnClickListener {
             if (bitelogOffset >= 0) {
-                Toast.makeText(this, "已到最新周期", Toast.LENGTH_SHORT).show()
+                toast(t("已到最新周期", "Already at latest period"))
                 return@setOnClickListener
             }
             bitelogOffset += 1
             loadBitelog()
         }
+    }
+
+    private fun setupBottomNav() {
+        navHome.setOnClickListener {
+            setBottomNavSelection(BottomTab.HOME)
+            navigateToMain()
+        }
+        navRecommend.setOnClickListener {
+            setBottomNavSelection(BottomTab.RECOMMEND)
+            navigateToRecommend()
+        }
+        navReport.setOnClickListener {
+            setBottomNavSelection(BottomTab.REPORT)
+        }
+        navProfile.setOnClickListener {
+            setBottomNavSelection(BottomTab.PROFILE)
+            navigateToProfile()
+        }
+    }
+
+    private fun setBottomNavSelection(tab: BottomTab) {
+        applyBottomNavState(navHome, navHomeIcon, navHomeLabel, tab == BottomTab.HOME)
+        applyBottomNavState(navRecommend, navRecommendIcon, navRecommendLabel, tab == BottomTab.RECOMMEND)
+        applyBottomNavState(navReport, navReportIcon, navReportLabel, tab == BottomTab.REPORT)
+        applyBottomNavState(navProfile, navProfileIcon, navProfileLabel, tab == BottomTab.PROFILE)
+    }
+
+    private fun applyBottomNavState(
+        container: LinearLayout,
+        icon: ImageView,
+        label: TextView,
+        selected: Boolean
+    ) {
+        if (selected) {
+            container.setBackgroundResource(R.drawable.bg_bottom_nav_item_selected)
+        } else {
+            container.background = null
+        }
+        val color = ContextCompat.getColor(
+            this,
+            if (selected) R.color.zk_primary else R.color.zk_text_secondary
+        )
+        icon.imageTintList = ColorStateList.valueOf(color)
+        label.setTextColor(color)
+    }
+
+    private fun navigateToMain() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            toast(t("缺少用户信息", "Missing user information."))
+            return
+        }
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("user_id", userId)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToRecommend() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            toast(t("缺少用户信息", "Missing user information."))
+            return
+        }
+        RecommendActivity.start(this, userId, SessionPrefs.getLastMealType(this))
+        finish()
+    }
+
+    private fun navigateToProfile() {
+        val userId = currentUserId
+        if (userId.isNullOrBlank()) {
+            toast(t("缺少用户信息", "Missing user information."))
+            return
+        }
+        val intent = Intent(this, PersonalProfileActivity::class.java).apply {
+            putExtra("user_id", userId)
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun applyPeriodMode() {
@@ -210,7 +358,7 @@ class ReportActivity : AppCompatActivity() {
     private fun loadReport(period: Period) {
         val userId = currentUserId ?: return
         if (period == Period.BITELOG) return
-        showState("报表加载中...", false)
+        showState(t("报表加载中...", "Loading reports..."), false)
 
         lifecycleScope.launch {
             val response = withContext(Dispatchers.IO) {
@@ -227,8 +375,8 @@ class ReportActivity : AppCompatActivity() {
             if (response?.isSuccessful != true || response.body() == null) {
                 currentReport = null
                 lineChart.clear()
-                showState("加载失败，请稍后重试", true)
-                Toast.makeText(this@ReportActivity, "报表接口请求失败", Toast.LENGTH_SHORT).show()
+                showState(t("加载失败，请稍后重试", "Failed to load report. Please try again."), true)
+                toast(t("报表接口请求失败", "Report API request failed"))
                 return@launch
             }
 
@@ -244,7 +392,7 @@ class ReportActivity : AppCompatActivity() {
             return
         }
 
-        tvRange.text = "数据范围：${report.startAt} - ${report.endAt}"
+        tvRange.text = t("数据范围", "Range") + ": ${report.startAt} - ${report.endAt}"
 
         val chartPoints = if (currentPeriod == Period.DAILY) {
             report.points
@@ -293,7 +441,7 @@ class ReportActivity : AppCompatActivity() {
 
         lineChart.axisLeft.removeAllLimitLines()
         lineChart.axisLeft.addLimitLine(
-            LimitLine(metricGoal(report), "目标").apply {
+            LimitLine(metricGoal(report), t("目标", "Goal")).apply {
                 lineColor = ContextCompat.getColor(this@ReportActivity, R.color.zk_progress_level_green)
                 lineWidth = 1.5f
                 textColor = ContextCompat.getColor(this@ReportActivity, R.color.zk_progress_level_green)
@@ -302,7 +450,7 @@ class ReportActivity : AppCompatActivity() {
             }
         )
 
-        tvGoalHint.text = "目标横线：${metricGoal(report).roundToInt()} ${metricUnit()}"
+        tvGoalHint.text = t("目标横线", "Goal line") + ": ${metricGoal(report).roundToInt()} ${metricUnit()}"
 
         lineChart.data = LineData(dataSet)
         lineChart.invalidate()
@@ -310,9 +458,13 @@ class ReportActivity : AppCompatActivity() {
 
         val latest = report.points.firstOrNull { metricValue(it) != null }
         if (latest == null) {
-            tvLatestSummary.text = "当前区间暂无摄入记录"
+            tvLatestSummary.text = t("当前区间暂无摄入记录", "No intake records in this period.")
         } else {
-            tvLatestSummary.text = "热量 ${latest.caloriesKcal?.roundToInt() ?: 0} kcal  蛋白质 ${latest.proteinG?.roundToInt() ?: 0} g  脂肪 ${latest.fatG?.roundToInt() ?: 0} g  碳水 ${latest.carbG?.roundToInt() ?: 0} g"
+            tvLatestSummary.text =
+                t("热量", "Calories") + " ${latest.caloriesKcal?.roundToInt() ?: 0} kcal  " +
+                t("蛋白质", "Protein") + " ${latest.proteinG?.roundToInt() ?: 0} g  " +
+                t("脂肪", "Fat") + " ${latest.fatG?.roundToInt() ?: 0} g  " +
+                t("碳水", "Carbs") + " ${latest.carbG?.roundToInt() ?: 0} g"
         }
     }
 
@@ -343,10 +495,10 @@ class ReportActivity : AppCompatActivity() {
 
     private fun metricLabel(): String {
         return when (currentMetric) {
-            Metric.CALORIES -> "热量"
-            Metric.PROTEIN -> "蛋白质"
-            Metric.FAT -> "脂肪"
-            Metric.CARB -> "碳水"
+            Metric.CALORIES -> t("热量", "Calories")
+            Metric.PROTEIN -> t("蛋白质", "Protein")
+            Metric.FAT -> t("脂肪", "Fat")
+            Metric.CARB -> t("碳水", "Carbs")
         }
     }
 
@@ -362,7 +514,7 @@ class ReportActivity : AppCompatActivity() {
     private fun loadBitelog() {
         val userId = currentUserId ?: return
         val periodParam = if (bitelogSubPeriod == BitelogPeriod.WEEKLY) "weekly" else "monthly"
-        tvBitelogRange.text = "加载中..."
+        tvBitelogRange.text = t("加载中...", "Loading...")
         tvBitelogEmpty.visibility = View.GONE
         bitelogGrid.removeAllViews()
 
@@ -374,8 +526,8 @@ class ReportActivity : AppCompatActivity() {
             }
 
             if (response?.isSuccessful != true || response.body() == null) {
-                tvBitelogRange.text = "加载失败"
-                Toast.makeText(this@ReportActivity, "Bitelog 加载失败", Toast.LENGTH_SHORT).show()
+                tvBitelogRange.text = t("加载失败", "Failed to load")
+                toast(t("饮食足迹加载失败", "Bitelog loading failed"))
                 return@launch
             }
 
@@ -385,18 +537,35 @@ class ReportActivity : AppCompatActivity() {
 
     private fun renderBitelog(data: DietMapResponse) {
         bitelogGrid.removeAllViews()
+        if (data.days.isEmpty()) {
+            tvBitelogRange.text = t("本周期暂无数据", "No data in this period")
+            tvBitelogEmpty.visibility = View.VISIBLE
+            return
+        }
 
-        val formatter = DateTimeFormatter.ofPattern("M月d日")
+        val formatter = if (isEnglishUi) {
+            DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
+        } else {
+            DateTimeFormatter.ofPattern("M月d日")
+        }
         val firstDate = LocalDate.parse(data.days.first().businessDay)
         val lastDate = LocalDate.parse(data.days.last().businessDay)
         val rangeLabel = when (data.period) {
-            "weekly" -> "本周 ${firstDate.format(formatter)} 至 ${lastDate.format(formatter)}"
-            else -> "${firstDate.year}年${firstDate.monthValue}月"
+            "weekly" -> if (isEnglishUi) {
+                "This week ${firstDate.format(formatter)} - ${lastDate.format(formatter)}"
+            } else {
+                "本周 ${firstDate.format(formatter)} 至 ${lastDate.format(formatter)}"
+            }
+            else -> if (isEnglishUi) {
+                firstDate.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH))
+            } else {
+                "${firstDate.year}年${firstDate.monthValue}月"
+            }
         }
         tvBitelogRange.text = when {
             data.offset == 0 -> rangeLabel
-            data.offset < 0 -> "$rangeLabel（往前 ${-data.offset}）"
-            else -> "$rangeLabel（往后 ${data.offset}）"
+            data.offset < 0 -> if (isEnglishUi) "$rangeLabel (${(-data.offset)} earlier)" else "$rangeLabel（往前 ${-data.offset}）"
+            else -> if (isEnglishUi) "$rangeLabel (${data.offset} later)" else "$rangeLabel（往后 ${data.offset}）"
         }
 
         val showMonthNumbers = data.period == "monthly"
@@ -519,7 +688,11 @@ class ReportActivity : AppCompatActivity() {
             val proteinText = "${intake.proteinG.roundToInt()} g"
             val fatText = "${intake.fatG.roundToInt()} g"
             val carbText = "${intake.carbG.roundToInt()} g"
-            text = "热量 $caloriesText\n蛋白质 $proteinText  脂肪 $fatText  碳水 $carbText"
+            text =
+                t("热量", "Calories") + " $caloriesText\n" +
+                t("蛋白质", "Protein") + " $proteinText  " +
+                t("脂肪", "Fat") + " $fatText  " +
+                t("碳水", "Carbs") + " $carbText"
             setTextColor(ContextCompat.getColor(this@ReportActivity, R.color.zk_text_secondary))
             gravity = Gravity.CENTER
             textSize = 13f
@@ -548,9 +721,52 @@ class ReportActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(intake.foodName)
             .setView(container)
-            .setPositiveButton("关闭", null)
+            .setPositiveButton(t("关闭", "Close"), null)
             .show()
     }
+
+    private fun applyLanguageTexts() {
+        btnBack.contentDescription = t("返回", "Back")
+        tvPageTitle.text = t("饮食报表", "Nutrition Report")
+        tvPageSubtitle.text = t("查看日报、周报、月报营养趋势", "View daily, weekly, and monthly nutrition trends")
+        togglePeriod.findViewById<TextView>(R.id.btnPeriodDaily).text = t("日报", "Day")
+        togglePeriod.findViewById<TextView>(R.id.btnPeriodWeekly).text = t("周报", "Week")
+        togglePeriod.findViewById<TextView>(R.id.btnPeriodMonthly).text = t("月报", "Month")
+        togglePeriod.findViewById<TextView>(R.id.btnPeriodBitelog).text = t("饮食足迹", "Bitelog")
+        chipGroupMetric.findViewById<TextView>(R.id.chipCalories).text = t("热量", "Calories")
+        chipGroupMetric.findViewById<TextView>(R.id.chipProtein).text = t("蛋白质", "Protein")
+        chipGroupMetric.findViewById<TextView>(R.id.chipFat).text = t("脂肪", "Fat")
+        chipGroupMetric.findViewById<TextView>(R.id.chipCarb).text = t("碳水", "Carbs")
+        tvLatestSummaryTitle.text = t("最新一天结构", "Latest Day Summary")
+        tvLatestSummary.text = t(
+            "热量 0 kcal  蛋白质 0 g  脂肪 0 g  碳水 0 g",
+            "Calories 0 kcal  Protein 0 g  Fat 0 g  Carbs 0 g"
+        )
+        toggleBitelogPeriod.findViewById<TextView>(R.id.btnBitelogWeekly).text = t("周", "Week")
+        toggleBitelogPeriod.findViewById<TextView>(R.id.btnBitelogMonthly).text = t("月", "Month")
+        btnBitelogPrev.contentDescription = t("上一期", "Previous")
+        btnBitelogNext.contentDescription = t("下一期", "Next")
+        tvWeekdayMon.text = if (isEnglishUi) "Mon" else "一"
+        tvWeekdayTue.text = if (isEnglishUi) "Tue" else "二"
+        tvWeekdayWed.text = if (isEnglishUi) "Wed" else "三"
+        tvWeekdayThu.text = if (isEnglishUi) "Thu" else "四"
+        tvWeekdayFri.text = if (isEnglishUi) "Fri" else "五"
+        tvWeekdaySat.text = if (isEnglishUi) "Sat" else "六"
+        tvWeekdaySun.text = if (isEnglishUi) "Sun" else "日"
+        tvBitelogEmpty.text = t("本周期暂无进食记录", "No intake records in this period")
+        lineChart.setNoDataText(t("暂无可展示数据", "No data to display"))
+
+        navHomeLabel.text = t("首页", "Home")
+        navRecommendLabel.text = t("推荐", "Suggest")
+        navReportLabel.text = t("报表", "Report")
+        navProfileLabel.text = t("我的", "Me")
+    }
+
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun t(zh: String, en: String): String = if (isEnglishUi) en else zh
 
     private fun showState(message: String, forceVisible: Boolean) {
         if (!forceVisible && message.isBlank()) {

@@ -25,8 +25,9 @@ settings = get_settings()
 
 # 餐次目标分配比例
 MEAL_RATIOS = {
-    MealType.BREAKFAST: 0.30,
-    MealType.LUNCH: 0.40,
+    # 四餐合计 100%，保证加餐纳入后整体目标仍闭合。
+    MealType.BREAKFAST: 0.25,
+    MealType.LUNCH: 0.35,
     MealType.DINNER: 0.30,
     MealType.SNACK: 0.10,
 }

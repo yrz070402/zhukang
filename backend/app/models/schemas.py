@@ -254,7 +254,7 @@ class RecommendRequest(BaseModel):
     userId: str
     selectedFoods: list[str] = Field(default_factory=list)
     manualInput: Optional[str] = None
-    mealType: str  # BREAKFAST, LUNCH, DINNER
+    mealType: str  # BREAKFAST, LUNCH, DINNER, SNACK
 
 
 class RecommendResponse(BaseModel):

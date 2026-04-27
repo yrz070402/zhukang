@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zk_bg"
-    android:fillViewport="true">
+    android:background="@color/zk_bg">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:paddingBottom="182dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,6 +34,7 @@
                 android:tint="@color/zk_text_primary" />
 
             <TextView
+                android:id="@+id/tvPageTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -39,6 +45,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/tvPageSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -60,7 +67,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minWidth="0dp"
                 android:minHeight="44dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="12sp"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
                 android:text="日报" />
 
             <com.google.android.material.button.MaterialButton
@@ -69,7 +84,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minWidth="0dp"
                 android:minHeight="44dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="12sp"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
                 android:text="周报" />
 
             <com.google.android.material.button.MaterialButton
@@ -78,7 +101,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minWidth="0dp"
                 android:minHeight="44dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="12sp"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
                 android:text="月报" />
 
             <com.google.android.material.button.MaterialButton
@@ -87,8 +118,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minWidth="0dp"
                 android:minHeight="44dp"
-                android:text="Bitelog" />
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="12sp"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
+                android:text="饮食足迹" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <HorizontalScrollView
@@ -191,6 +230,7 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tvLatestSummaryTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="最新一天结构"
@@ -223,6 +263,9 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
-    </LinearLayout>
+        </LinearLayout>
 
-</ScrollView>
+    </ScrollView>
+
+    <include layout="@layout/layout_bottom_nav" />
+</FrameLayout>

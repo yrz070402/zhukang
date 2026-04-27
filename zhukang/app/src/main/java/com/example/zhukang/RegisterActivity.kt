@@ -14,6 +14,7 @@ import com.example.zhukang.model.RegisterRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -70,6 +71,8 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         btnSubmitRegister.isEnabled = false
+        val defaultText = btnSubmitRegister.text
+        btnSubmitRegister.text = "注册中..."
         lifecycleScope.launch {
             val response = withContext(Dispatchers.IO) {
                 runCatching {
@@ -78,6 +81,7 @@ class RegisterActivity : AppCompatActivity() {
             }
 
             btnSubmitRegister.isEnabled = true
+            btnSubmitRegister.text = defaultText
 
             if (response == null) {
                 Toast.makeText(this@RegisterActivity, "网络请求失败，请稍后重试", Toast.LENGTH_SHORT).show()
@@ -85,7 +89,25 @@ class RegisterActivity : AppCompatActivity() {
             }
 
             if (!response.isSuccessful || response.body() == null) {
-                Toast.makeText(this@RegisterActivity, "注册失败：${response.code()}", Toast.LENGTH_SHORT).show()
+                val detail = runCatching {
+                    val raw = response.errorBody()?.string().orEmpty()
+                    JSONObject(raw).optString("detail")
+                }.getOrNull().orEmpty()
+
+                when (response.code()) {
+                    409 -> {
+                        etRegisterAccount.error = if (detail.isNotBlank()) detail else "账号已存在"
+                        etRegisterAccount.requestFocus()
+                    }
+
+                    else -> {
+                        if (detail.isNotBlank()) {
+                            Toast.makeText(this@RegisterActivity, detail, Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@RegisterActivity, "注册失败：${response.code()}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
                 return@launch
             }
 

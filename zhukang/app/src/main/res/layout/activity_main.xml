@@ -16,32 +16,44 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:paddingBottom="96dp"
+        android:paddingBottom="188dp"
         tools:context=".MainActivity">
 
         <!-- 标题 -->
         <TextView
             android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="筑康"
-            android:textSize="28sp"
+            android:text="筑康NutriNest"
+            android:textSize="30sp"
             android:textStyle="bold"
             android:textColor="@color/zk_text_primary"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnLanguageToggle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <Button
+            android:id="@+id/btnLanguageToggle"
+            android:layout_width="68dp"
+            android:layout_height="36dp"
+            android:backgroundTint="@color/zk_secondary"
+            android:text="EN"
+            android:textColor="@color/zk_text_primary"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tvTitle" />
+
         <TextView
             android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="拍一拍，知营养"
+            android:text="选择餐次后拍照，自动更新今日累计营养"
             android:textSize="14sp"
             android:textColor="@color/zk_text_secondary"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvTitle"
             app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
         <!-- 餐次选择区 -->
@@ -51,7 +63,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="14dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
@@ -61,11 +73,11 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="6dp"
                 android:text="早餐"
                 android:textSize="14sp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:backgroundTint="@android:color/transparent"
+                android:background="@drawable/bg_meal_chip_unselected"
+                android:stateListAnimator="@null"
                 android:textColor="@color/zk_text_primary" />
 
             <Button
@@ -73,11 +85,11 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="6dp"
                 android:text="午餐"
                 android:textSize="14sp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:backgroundTint="@android:color/transparent"
+                android:background="@drawable/bg_meal_chip_unselected"
+                android:stateListAnimator="@null"
                 android:textColor="@color/zk_text_primary" />
 
             <Button
@@ -85,58 +97,104 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
+                android:layout_marginEnd="6dp"
                 android:text="晚餐"
                 android:textSize="14sp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:backgroundTint="@android:color/transparent"
+                android:background="@drawable/bg_meal_chip_unselected"
+                android:stateListAnimator="@null"
+                android:textColor="@color/zk_text_primary" />
+
+            <Button
+                android:id="@+id/btnSnack"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="加餐"
+                android:textSize="14sp"
+                android:background="@drawable/bg_meal_chip_unselected"
+                android:stateListAnimator="@null"
                 android:textColor="@color/zk_text_primary" />
 
         </LinearLayout>
 
-        <!-- 拍照按钮 -->
-        <Button
-            android:id="@+id/btnTakePhoto"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardQuickActions"
             android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:text="拍照分析"
-            android:textSize="18sp"
-            android:drawableStart="@android:drawable/ic_menu_camera"
-            android:drawablePadding="8dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:backgroundTint="@color/zk_primary"
-            android:textColor="@color/zk_on_primary"
+            app:cardBackgroundColor="@color/zk_surface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/zk_divider"
+            app:strokeWidth="1dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/mealTypeSelector" />
+            app:layout_constraintTop_toBottomOf="@id/mealTypeSelector">
 
-        <!-- 测试按钮（使用本地测试图片） -->
-        <Button
-            android:id="@+id/btnTestImage"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:text="使用测试图片"
-            android:textSize="14sp"
-            android:textColor="@color/zk_text_primary"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/zk_secondary"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnTakePhoto" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
 
-        <!-- 智能推荐按钮 -->
-        <Button
-            android:id="@+id/btnRecommend"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:text="智能推荐"
-            android:textSize="14sp"
-            android:textColor="@color/zk_on_primary"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/zk_primary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnTestImage" />
+                <TextView
+                    android:id="@+id/tvQuickActionsTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="快捷操作"
+                    android:textColor="@color/zk_text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnTakePhoto"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="@color/zk_primary"
+                        android:drawableStart="@android:drawable/ic_menu_camera"
+                        android:drawablePadding="6dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="拍照识别"
+                        android:textColor="@color/zk_on_primary"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/btnPickImage"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="@color/zk_secondary"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="相册导入"
+                        android:textColor="@color/zk_text_primary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnRecommend"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:backgroundTint="@color/zk_primary"
+                    android:text="下一餐智能推荐"
+                    android:textColor="@color/zk_on_primary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- 图片预览区域 -->
         <androidx.cardview.widget.CardView
@@ -148,7 +206,7 @@
             app:cardElevation="4dp"
             app:cardBackgroundColor="@color/zk_surface"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/btnRecommend">
+            app:layout_constraintTop_toBottomOf="@id/cardQuickActions">
 
             <ImageView
                 android:id="@+id/ivFoodImage"
@@ -221,6 +279,7 @@
                         android:gravity="center">
 
                         <TextView
+                            android:id="@+id/tvCaloriesLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="热量"
@@ -237,6 +296,7 @@
                             android:textColor="@color/zk_nutrient_calories" />
 
                         <TextView
+                            android:id="@+id/tvCaloriesUnit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="千卡"
@@ -254,6 +314,7 @@
                         android:gravity="center">
 
                         <TextView
+                            android:id="@+id/tvProteinLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="蛋白质"
@@ -270,6 +331,7 @@
                             android:textColor="@color/zk_nutrient_protein" />
 
                         <TextView
+                            android:id="@+id/tvProteinUnit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="克"
@@ -287,6 +349,7 @@
                         android:gravity="center">
 
                         <TextView
+                            android:id="@+id/tvFatLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="脂肪"
@@ -303,6 +366,7 @@
                             android:textColor="@color/zk_nutrient_fat" />
 
                         <TextView
+                            android:id="@+id/tvFatUnit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="克"
@@ -320,6 +384,7 @@
                         android:gravity="center">
 
                         <TextView
+                            android:id="@+id/tvCarbsLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="碳水"
@@ -336,6 +401,7 @@
                             android:textColor="@color/zk_nutrient_carbs" />
 
                         <TextView
+                            android:id="@+id/tvCarbsUnit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="克"
@@ -370,9 +436,10 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tvDayProgressTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="今日饮食进度"
+                    android:text="今日累计进度"
                     android:textColor="@color/zk_text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -382,7 +449,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="百分比（点按切换）"
+                    android:text="今日累计百分比（点按切换）"
                     android:textColor="@color/zk_text_secondary"
                     android:textSize="12sp" />
 
@@ -393,6 +460,7 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvDayCaloriesLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="热量"
@@ -443,6 +511,7 @@
                     </FrameLayout>
 
                     <TextView
+                        android:id="@+id/tvDayProteinLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
@@ -494,6 +563,7 @@
                     </FrameLayout>
 
                     <TextView
+                        android:id="@+id/tvDayFatLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
@@ -545,6 +615,7 @@
                     </FrameLayout>
 
                     <TextView
+                        android:id="@+id/tvDayCarbsLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
@@ -616,28 +687,6 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
-    <!-- 临时入口：后续可整体删除并替换为正式导航 -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabProfileEntry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="92dp"
-        android:contentDescription="进入个人资料"
-        android:src="@android:drawable/ic_menu_manage"
-        app:backgroundTint="@color/zk_secondary"
-        app:tint="@color/zk_text_primary" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabReportEntry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="20dp"
-        android:contentDescription="进入饮食报表"
-        android:src="@android:drawable/ic_menu_sort_by_size"
-        app:backgroundTint="@color/zk_primary"
-        app:tint="@color/zk_on_primary" />
+    <include layout="@layout/layout_bottom_nav" />
 
 </FrameLayout>
