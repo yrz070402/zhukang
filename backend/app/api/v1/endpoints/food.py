@@ -222,14 +222,13 @@ async def analyze_food_mock(
             f"[MOCK] 图片预处理完成: 原始={len(contents)} bytes, 预处理后={len(processed_bytes)} bytes"
         )
 
-        # 返回模拟豆包识别结果，便于前后端联调
-        # 数据来源：豆包 Vision API 真实识别 test_food.jpg
+        # 返回模拟识别结果，便于前后端联调（不写入每日累计，避免污染用户真实数据）
         result = FoodAnalysisResponse(
-            food_name="豆包识别-综合餐食",
-            calories=1260.0,
-            protein=84.0,
-            fat=72.0,
-            carbs=27.0
+            food_name="海鲜拼盘",
+            calories=420.0,
+            protein=34.0,
+            fat=16.0,
+            carbs=38.0
         )
 
         image_url: str | None = None
@@ -239,7 +238,7 @@ async def analyze_food_mock(
         except Exception as thumb_err:
             logger.warning(f"[MOCK] Bitelog 缩略图落盘失败，忽略: {thumb_err}")
 
-        await _insert_nutrition_intake(db, user_id, result, image_url=image_url, meal_type=resolved_meal_type)
+        # mock 结果仅用于预览，不落库
         return result
 
     except HTTPException:

@@ -120,12 +120,6 @@ interface AuthApiService {
         @Body request: RecommendRequest
     ): Response<RecommendResponse>
 
-    // 饮食推荐 Mock 接口（用于展示测试）
-    @POST("api/v1/recommend/next-meal/mock")
-    suspend fun getRecommendationMock(
-        @Body request: RecommendRequest
-    ): Response<RecommendResponse>
-
     companion object {
         private val BASE_URL: String = BackendUrls.BASE_URL
 

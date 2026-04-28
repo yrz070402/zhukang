@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/zk_bg"
-    android:fillViewport="true">
+    android:background="@color/zk_bg">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:paddingBottom="182dp">
 
         <!-- 顶部返回栏 -->
         <LinearLayout
@@ -30,6 +35,7 @@
                 android:tint="@color/zk_text_primary" />
 
             <TextView
+                android:id="@+id/tvPageTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -41,6 +47,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/tvPageSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -87,6 +94,7 @@
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tvNicknameLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -148,6 +156,7 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tvBasicInfoTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="基础信息"
@@ -156,6 +165,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvAgeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -188,6 +198,7 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/tvHeightLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -220,6 +231,7 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/tvWeightLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -252,6 +264,7 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/tvGenderTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -317,6 +330,7 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tvGoalSectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="目标与配额"
@@ -351,6 +365,7 @@
                 </RadioGroup>
 
                 <TextView
+                    android:id="@+id/tvGoalCaloriesLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -383,6 +398,7 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/tvGoalCarbLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -415,6 +431,7 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/tvGoalProteinLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -447,6 +464,7 @@
                     android:visibility="gone" />
 
                 <TextView
+                    android:id="@+id/tvGoalFatLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -495,6 +513,7 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tvTagsTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="用户标签"
@@ -562,6 +581,9 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
-    </LinearLayout>
+        </LinearLayout>
 
-</ScrollView>
+    </ScrollView>
+
+    <include layout="@layout/layout_bottom_nav" />
+</FrameLayout>

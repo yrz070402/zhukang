@@ -1,119 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/zk_bg"
-    android:padding="24dp">
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/tvRegisterTitle"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="注册"
-        android:textColor="@color/zk_text_primary"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:padding="24dp">
 
-    <TextView
-        android:id="@+id/tvRegisterHint"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:text="请填写账号与密码完成注册"
-        android:textColor="@color/zk_text_secondary"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvRegisterTitle" />
+        <TextView
+            android:id="@+id/tvRegisterTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="创建账号"
+            android:textColor="@color/zk_text_primary"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/etRegisterAccount"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="20dp"
-        android:background="@android:drawable/edit_text"
-        android:importantForAutofill="no"
-        android:hint="请输入账号（3-32位）"
-        android:inputType="textNoSuggestions"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:textColor="@color/zk_text_primary"
-        android:textColorHint="@color/zk_text_secondary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvRegisterHint" />
+        <TextView
+            android:id="@+id/tvRegisterHint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="填写账号和密码，完成后继续完善个人资料"
+            android:textColor="@color/zk_text_secondary"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvRegisterTitle" />
 
-    <EditText
-        android:id="@+id/etRegisterPassword"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="12dp"
-        android:background="@android:drawable/edit_text"
-        android:hint="请输入密码（6-64位）"
-        android:inputType="textPassword"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:textColor="@color/zk_text_primary"
-        android:textColorHint="@color/zk_text_secondary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etRegisterAccount" />
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardRegisterForm"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardBackgroundColor="@color/zk_surface"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="3dp"
+            app:strokeColor="@color/zk_divider"
+            app:strokeWidth="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvRegisterHint">
 
-    <EditText
-        android:id="@+id/etConfirmPassword"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="12dp"
-        android:background="@android:drawable/edit_text"
-        android:hint="请再次输入密码"
-        android:inputType="textPassword"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:textColor="@color/zk_text_primary"
-        android:textColorHint="@color/zk_text_secondary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etRegisterPassword" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="18dp">
 
-    <CheckBox
-        android:id="@+id/cbShowRegisterPassword"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="显示密码"
-        android:textColor="@color/zk_text_secondary"
-        app:layout_constraintStart_toStartOf="@id/etConfirmPassword"
-        app:layout_constraintTop_toBottomOf="@id/etConfirmPassword" />
+                <EditText
+                    android:id="@+id/etRegisterAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_edittext"
+                    android:hint="请输入账号（3-32位）"
+                    android:importantForAutofill="no"
+                    android:inputType="textNoSuggestions"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:textColor="@color/zk_text_primary"
+                    android:textColorHint="@color/zk_text_secondary" />
 
-    <Button
-        android:id="@+id/btnSubmitRegister"
-        android:layout_width="0dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="@color/zk_primary"
-        android:text="注册"
-        android:textColor="@color/zk_on_primary"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cbShowRegisterPassword" />
+                <EditText
+                    android:id="@+id/etRegisterPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_edittext"
+                    android:hint="请输入密码（6-64位）"
+                    android:inputType="textPassword"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:textColor="@color/zk_text_primary"
+                    android:textColorHint="@color/zk_text_secondary" />
 
-    <Button
-        android:id="@+id/btnBackToLogin"
-        android:layout_width="0dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:backgroundTint="@color/zk_secondary"
-        android:text="返回登录"
-        android:textColor="@color/zk_text_primary"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnSubmitRegister" />
+                <EditText
+                    android:id="@+id/etConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_edittext"
+                    android:hint="请再次输入密码"
+                    android:inputType="textPassword"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:textColor="@color/zk_text_primary"
+                    android:textColorHint="@color/zk_text_secondary" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <CheckBox
+                    android:id="@+id/cbShowRegisterPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="显示密码"
+                    android:textColor="@color/zk_text_secondary" />
+
+                <Button
+                    android:id="@+id/btnSubmitRegister"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="14dp"
+                    android:backgroundTint="@color/zk_primary"
+                    android:text="注册"
+                    android:textColor="@color/zk_on_primary"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/btnBackToLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:backgroundTint="@color/zk_secondary"
+                    android:text="返回登录"
+                    android:textColor="@color/zk_text_primary"
+                    android:textSize="15sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
